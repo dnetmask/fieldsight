@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>FieldSight · Visita técnica</title>
+
+<!-- PWA: manifest e íconos -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A2540">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FieldSight">
+<meta name="mobile-web-app-capable" content="yes">
+
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== AUTH VIEW (login / registro) ===================== -->
+  <div class="view" id="authView" style="padding-top:60px;">
+    <div style="text-align:center;margin-bottom:26px;">
+      <div style="width:52px;height:52px;border-radius:12px;background:var(--orange);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="28" height="28"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/></svg>
+      </div>
+      <div style="font-size:19px;font-weight:700;color:var(--navy);">FieldSight</div>
+      <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--ink-soft);">NETMASK S.A.S.</div>
+    </div>
+
+    <div class="card" id="authCard">
+      <div id="authTitleLogin">
+        <label>Correo</label>
+        <input type="text" id="authEmail" inputmode="email" autocomplete="username" placeholder="tu@correo.com">
+        <label>Contraseña</label>
+        <input type="password" id="authPassword" autocomplete="current-password" placeholder="••••••••">
+        <div id="authNombreWrap" class="hidden">
+          <label>Nombre completo</label>
+          <input type="text" id="authNombre" placeholder="Nombre y apellido">
+        </div>
+        <div class="hint" id="authError" style="display:none;color:var(--red);"></div>
+        <button class="btn btn-primary" id="btnAuthSubmit" onclick="submitAuth()" style="margin-top:6px;">Iniciar sesión</button>
+        <button class="btn btn-ghost" onclick="toggleAuthMode()" style="margin-top:8px;" id="btnAuthToggle">¿No tienes cuenta? Regístrate</button>
+      </div>
+    </div>
+    <div class="hint" style="text-align:center;">Tus datos y los de tus compañeros de equipo se sincronizan de forma segura y compartida.</div>
+  </div>
+
+  <div class="topbar no-print">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1a0e00" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/></svg>
+        </div>
+        <div class="brand-text">
+          <div class="t1">FieldSight</div>
+          <div class="t2" id="brandUserLabel">NETMASK S.A.S.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="icon-btn hidden" id="btnInstall" onclick="instalarApp()" title="Instalar app" style="background:var(--orange);border-color:var(--orange);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        </button>
+        <button class="icon-btn" onclick="goHistory()" title="Historial">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        </button>
+        <button class="icon-btn" onclick="cerrarSesion()" title="Cerrar sesión">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab" id="tabNew" onclick="goForm()">Nueva visita</div>
+      <div class="tab" id="tabHist" onclick="goHistory()">Historial</div>
+    </div>
+  </div>
+
+  <!-- ===================== FORM VIEW ===================== -->
+  <div class="view hidden" id="formView">
+
+    <div class="install-banner hidden" id="editBanner" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <span>✏️ Editando visita <b id="editBannerCode"></b></span>
+      <a href="#" onclick="cancelarEdicion();return false;" style="color:#7A4300;font-weight:700;text-decoration:underline;flex-shrink:0;">Cancelar</a>
+    </div>
+
+    <div class="section-label"><span class="num">1</span>Datos generales</div>
+    <div class="card">
+      <div class="field-row">
+        <div>
+          <label>Proyecto</label>
+          <input type="text" id="fProyecto" placeholder="Nombre del proyecto">
+        </div>
+        <div>
+          <label>Cliente</label>
+          <input type="text" id="fCliente" placeholder="Cliente">
+        </div>
+      </div>
+      <label>Sede / ubicación</label>
+      <input type="text" id="fSede" placeholder="Nombre de la sede o dirección">
+      <div class="field-row">
+        <div>
+          <label>Técnico</label>
+          <input type="text" id="fTecnico" placeholder="Nombre del técnico">
+        </div>
+        <div>
+          <label>Fecha</label>
+          <input type="date" id="fFecha">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label"><span class="num">2</span>Tipo de actividad</div>
+    <div class="section-sub">Cada visita tiene un único tipo de actividad — no se pueden combinar.</div>
+    <div class="card">
+      <div class="type-toggle">
+        <div class="type-opt" id="topt-activos" onclick="selectTipo('activos')">
+          <div class="box"><div class="dot"></div></div>
+          <div class="txt"><b>Levantamiento de activos</b><span>Identificación y evidencia de equipos existentes</span></div>
+        </div>
+        <div class="type-opt" id="topt-implementacion" onclick="selectTipo('implementacion')">
+          <div class="box"><div class="dot"></div></div>
+          <div class="txt"><b>Implementación (antes / después)</b><span>Instalación o intervención con validación</span></div>
+        </div>
+        <div class="type-opt" id="topt-inspeccion" onclick="selectTipo('inspeccion')">
+          <div class="box"><div class="dot"></div></div>
+          <div class="txt"><b>Inspección de rack / tablero / datacenter</b><span>Checklist de condición técnica</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label"><span class="num">3</span>Ubicación GPS</div>
+    <div class="gps-box" id="gpsBox">
+      <div class="gps-empty" id="gpsEmpty">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA6B2" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/></svg>
+        Aún no se ha capturado la ubicación
+      </div>
+      <div class="gps-data hidden" id="gpsData">
+        <div class="coord" id="gpsCoord">-</div>
+        <div class="meta" id="gpsMeta">-</div>
+        <a id="gpsLink" href="#" target="_blank" rel="noopener">Ver en Google Maps →</a>
+      </div>
+    </div>
+    <button class="btn btn-outline" onclick="capturarGPS()" id="btnGps">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      Capturar ubicación actual
+    </button>
+
+    <!-- ACTIVOS -->
+    <div id="blockActivos" class="hidden">
+      <div class="section-label"><span class="num">4</span>Activos levantados</div>
+      <div id="activosList"></div>
+      <button class="add-card-btn" onclick="addActivo()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar activo
+      </button>
+    </div>
+
+    <!-- IMPLEMENTACIÓN -->
+    <div id="blockImplementacion" class="hidden">
+      <div class="section-label"><span class="num">4</span>Implementación antes / después</div>
+      <div id="implList"></div>
+      <button class="add-card-btn" onclick="addImpl()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar implementación
+      </button>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div id="blockChecklist" class="hidden">
+      <div class="section-label"><span class="num">4</span>Checklist de inspección</div>
+      <div id="checklistWrap"></div>
+    </div>
+
+    <div class="section-label"><span class="num">5</span>Observaciones generales</div>
+    <div class="card">
+      <textarea id="fObs" placeholder="Novedades, recomendaciones, pendientes..."></textarea>
+    </div>
+
+    <div class="section-label"><span class="num">6</span>Firma de responsable</div>
+    <div class="card">
+      <div class="sig-pad-wrap"><canvas id="sigCanvas"></canvas></div>
+      <button class="btn btn-ghost" onclick="limpiarFirma()" style="margin-bottom:12px;">Borrar firma</button>
+      <div class="field-row">
+        <div>
+          <label>Nombre de quien firma</label>
+          <input type="text" id="sigNombre" placeholder="Nombre completo">
+        </div>
+        <div>
+          <label>Cargo</label>
+          <input type="text" id="sigCargo" placeholder="Ej. Supervisor de sitio">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="guardarVisita()" id="btnGuardar" style="margin-top:6px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+      Guardar visita
+    </button>
+  </div>
+
+  <!-- ===================== HISTORY VIEW ===================== -->
+  <div class="view hidden" id="historyView">
+    <div class="install-banner" id="installBanner">
+      💡 <b>Tip:</b> en Android/Chrome debería aparecer un botón de instalación (⬇) junto al ícono de historial arriba. Si no aparece, usa el menú del navegador → <b>"Agregar a pantalla de inicio" / "Instalar app"</b>. En iPhone/Safari: toca <b>Compartir → Agregar a pantalla de inicio</b>.
+    </div>
+    <div id="histList"></div>
+  </div>
+
+  <!-- ===================== DETAIL / PRINT VIEW ===================== -->
+  <div class="view hidden" id="detailView">
+    <button class="btn btn-outline no-print" onclick="goHistory()" style="margin-bottom:14px;">← Volver al historial</button>
+    <div id="detailContent"></div>
+    <button class="btn btn-primary no-print" onclick="reabrirVisita(currentDetailId)" style="margin-top:16px;" id="btnEditarVisita">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+      Editar esta visita
+    </button>
+    <div class="no-print" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+      <button class="btn btn-word" onclick="exportarWord()" id="btnWord">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        Exportar Word
+      </button>
+      <button class="btn btn-excel" onclick="exportarExcel()" id="btnExcel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        Exportar Excel
+      </button>
+      <button class="btn btn-dark" onclick="window.print()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+        Imprimir / PDF
+      </button>
+      <button class="btn btn-zip" onclick="exportarFotosZip()" id="btnFotosZip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Fotos (ZIP)
+      </button>
+      <button class="btn btn-danger" onclick="eliminarVisitaActual()" style="grid-column:1/-1;" id="btnEliminarVisita">Eliminar</button>
+    </div>
+  </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/state.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/catalogos.js"></script>
+<script src="js/validacion.js"></script>
+<script src="js/navegacion.js"></script>
+<script src="js/gps.js"></script>
+<script src="js/fotos.js"></script>
+<script src="js/activos.js"></script>
+<script src="js/implementaciones.js"></script>
+<script src="js/checklist.js"></script>
+<script src="js/firma.js"></script>
+<script src="js/guardar.js"></script>
+<script src="js/historial.js"></script>
+<script src="js/detalle.js"></script>
+<script src="js/export-excel.js"></script>
+<script src="js/export-word.js"></script>
+<script src="js/export-zip.js"></script>
+<script src="js/visita-actions.js"></script>
+<script src="js/pwa.js"></script>
+<script src="js/init.js"></script>
+</body>
+</html>

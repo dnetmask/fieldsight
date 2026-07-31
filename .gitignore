@@ -1,0 +1,20 @@
+# Dependencias (por si se instalan localmente para deploy/azure)
+node_modules/
+package-lock.json
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Variables de entorno / secretos (si en el futuro se separan de config.js)
+.env
+.env.local
