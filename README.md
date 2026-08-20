@@ -30,7 +30,8 @@ fieldsight/
 ├── supabase/schema.sql      # esquema de base de datos + políticas RLS
 ├── deploy/
 │   ├── azure/               # Azure App Service (Windows o Linux)
-│   └── netlify/             # Netlify Drop
+│   ├── netlify/             # Netlify Drop
+│   └── docker/              # Contenedor Docker (hosting interno Netmask)
 └── docs/
     ├── PRD.md               # documento de producto (texto plano)
     └── FieldSight_PRD.docx  # versión formateada del PRD
@@ -58,8 +59,8 @@ fieldsight/
      el manifest y el service worker necesitan `http://`, no `file://`.)
 
 4. **Publicar**
-   - Ver `deploy/azure/LEEME-AZURE.md` o `deploy/netlify/LEEME.md` según
-     dónde se vaya a alojar.
+   - Ver `deploy/azure/LEEME-AZURE.md`, `deploy/netlify/LEEME.md` o
+     `deploy/docker/LEEME-DOCKER.md` según dónde se vaya a alojar.
    - Después de publicar, agrega la URL final en Supabase →
      Authentication → URL Configuration → Redirect URLs.
 

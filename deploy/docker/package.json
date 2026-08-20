@@ -1,0 +1,15 @@
+{
+  "name": "fieldsight-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FieldSight — Netmask S.A.S. — servidor estático para el contenedor Docker",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,7 @@
+.git
+.gitignore
+node_modules
+docs
+deploy/azure
+deploy/netlify
+*.md
