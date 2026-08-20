@@ -22,3 +22,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+/* ---------------------------------------------------------
+   SINCRONIZACIÓN EN SEGUNDO PLANO — se dispara cuando vuelve la
+   conexión o cambia de red. navigator.connection.addEventListener
+   solo existe en Android/Chrome; el intervalo es el respaldo para
+   iOS/Safari (que no avisa cambios de red).
+--------------------------------------------------------- */
+window.addEventListener('online', () => intentarSincronizarPendientes(false));
+if(navigator.connection){
+  navigator.connection.addEventListener('change', () => intentarSincronizarPendientes(false));
+}
+setInterval(() => intentarSincronizarPendientes(false), 2 * 60 * 1000);
+

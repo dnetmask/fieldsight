@@ -71,6 +71,8 @@ async function cargarSesion(session){
   await cargarCatalogoProtocolos();
   renderChecklist();
   goForm();
+  await actualizarBarraSync();
+  intentarSincronizarPendientes(false);
 }
 async function cerrarSesion(){
   if(!confirm('¿Cerrar sesión?')) return;
