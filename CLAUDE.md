@@ -84,12 +84,21 @@ Supabase). Resumen:
 
 ## Decisiones y trade-offs a tener en cuenta
 
-- **La app requiere conexión a internet para guardar/leer** (Supabase). Se
-  sacrificó el modo 100% offline de una versión anterior a cambio de datos
-  compartidos entre usuarios y login real. Si se pide recuperar
-  funcionamiento offline, la solución correcta es una cola de sincronización
-  (capturar local, subir cuando vuelve la señal) — no volver a `localStorage`
-  puro, que ya causó un bug de cuota llena en campo.
+- **La app requiere conexión (a internet o a la red interna) para
+  guardar/leer** (Supabase). Se sacrificó el modo 100% offline de una
+  versión anterior a cambio de datos compartidos entre usuarios y login
+  real. Si se pide recuperar funcionamiento offline, la solución correcta
+  es una cola de sincronización (capturar local, subir cuando vuelve la
+  señal) — no volver a `localStorage` puro, que ya causó un bug de cuota
+  llena en campo.
+- **Supabase auto-hospedado**: Netmask decidió correr Supabase dentro de
+  su propia infraestructura (no el Supabase cloud) para tener control
+  total de los datos. El paquete de despliegue (copia sin modificar del
+  oficial de Supabase, + un override propio de backups) vive en
+  `deploy/docker/supabase/` — ver
+  `deploy/docker/supabase/LEEME-SUPABASE-SELFHOSTED.md`. Es un stack de
+  11 servicios, no un solo contenedor; no editar `docker-compose.yml` ni
+  `volumes/` de esa carpeta a mano, son la copia oficial.
 - **Exportación a Word (`js/export-word.js`)**: genera un `.docx` real
   (formato OOXML) construido a mano con JSZip, sin librería `docx` externa,
   para no depender de bundlers. Si hay que tocar el formato del documento,
