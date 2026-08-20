@@ -1,4 +1,24 @@
-function comprimirFoto(file, cb){
+// Dibuja una franja semitransparente con texto en la parte inferior de la
+// foto (marca de agua) — así cada foto queda identificada aunque se vea
+// aislada del resto del reporte (por ejemplo, exportada a un ZIP).
+function dibujarMarcaAgua(ctx, canvas, lineas){
+  const validas = (lineas || []).filter(Boolean);
+  if(!validas.length) return;
+  const fontSize = Math.max(13, Math.round(canvas.width * 0.032));
+  const lineHeight = Math.round(fontSize * 1.35);
+  const padding = Math.round(fontSize * 0.6);
+  const boxHeight = lineHeight * validas.length + padding * 2;
+  ctx.fillStyle = 'rgba(10, 37, 64, 0.72)'; // navy Netmask translúcido
+  ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = fontSize + 'px sans-serif';
+  ctx.textBaseline = 'top';
+  validas.forEach((linea, i) => {
+    ctx.fillText(linea, padding, canvas.height - boxHeight + padding + i * lineHeight);
+  });
+}
+
+function comprimirFoto(file, cb, lineasMarca){
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
@@ -10,6 +30,7 @@ function comprimirFoto(file, cb){
       canvas.height = Math.round(img.height * scale);
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      dibujarMarcaAgua(ctx, canvas, lineasMarca);
 
       let quality = 0.55;
       let dataUrl = canvas.toDataURL('image/jpeg', quality);
@@ -66,6 +87,29 @@ function updatePhotoCount(gridId, n){
   const countEl = gridEl.parentElement.querySelector('.photo-count');
   if(countEl) countEl.textContent = n + ' foto(s) agregada(s)';
 }
+// Calcula las líneas de la marca de agua según el tipo de actividad y el
+// campo de la foto (activo, o antes/después de una implementación).
+function lineasMarcaFoto(owner, field){
+  if(field === 'fotos'){ // Levantamiento de activos
+    return [
+      owner.area && ('Área: ' + owner.area),
+      owner.proceso && ('Proceso: ' + owner.proceso),
+      owner.maquina && ('Máquina: ' + owner.maquina),
+      owner.ubicacion && ('Ubicación: ' + owner.ubicacion),
+      owner.nombre && ('Activo: ' + owner.nombre),
+    ].filter(Boolean);
+  }
+  if(field === 'fotosAntes' || field === 'fotosDespues'){ // Implementación
+    const catField = catFieldFor(field);
+    return [
+      owner.eqNombre && ('Equipo: ' + owner.eqNombre),
+      owner.eqTipo && ('Tipo: ' + owner.eqTipo),
+      owner.eqUbicacion && ('Ubicación: ' + owner.eqUbicacion),
+      owner[catField] && ('Foto: ' + owner[catField]),
+    ].filter(Boolean);
+  }
+  return [];
+}
 function addFotoGenerico(gridId, uid, field, input){
   const file = input.files[0];
   if(!file) return;
@@ -76,7 +120,7 @@ function addFotoGenerico(gridId, uid, field, input){
     owner[field].push({cat: owner[catField], dataUrl});
     renderPhotoGrid(gridId, owner, field);
     updatePhotoCount(gridId, owner[field].length);
-  });
+  }, lineasMarcaFoto(owner, field));
   input.value = '';
 }
 function delFotoGenerico(gridId, uid, field, idx){

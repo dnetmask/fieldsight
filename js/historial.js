@@ -6,6 +6,7 @@ function filaAVisita(row){
     proyecto: row.proyecto, cliente: row.cliente, sede: row.sede, tecnico: row.tecnico, fecha: row.fecha,
     tipo: row.tipo,
     gps: d.gps, activos: d.activos||[], implementaciones: d.implementaciones||[], checklist: d.checklist||{},
+    tipoInspeccion: d.tipoInspeccion || null,
     observaciones: d.observaciones, firma: d.firma,
     creadoPor: row.creado_por_nombre, actualizadoPor: row.actualizado_por_nombre,
     creadoEn: row.created_at, actualizadoEn: row.updated_at,

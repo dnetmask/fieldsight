@@ -59,6 +59,8 @@ async function reabrirVisita(id){
         checklistState[key] = {estado: st.estado||null, criticidad: st.criticidad||null, obs: st.obs||'', foto: fotoDataUrl, fotoKey: st.fotoKey||null};
       }
       renderChecklist();
+      tipoInspeccion = r.tipoInspeccion || null;
+      document.getElementById('tipoInspeccionSel').value = tipoInspeccion || '';
     }
 
     actualizarVisibilidadTipo(r.tipo);

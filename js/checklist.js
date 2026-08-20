@@ -61,11 +61,17 @@ function renderChecklistPhoto(key){
 function addChecklistFoto(key, input){
   const file = input.files[0];
   if(!file) return;
+  const [grupo, item] = key.split('|');
+  const lineas = [
+    tipoInspeccion && ('Inspección: ' + tipoInspeccion),
+    'Tipo: ' + grupo,
+    'Detalle: ' + item,
+  ].filter(Boolean);
   comprimirFoto(file, (dataUrl) => {
     checklistState[key].foto = dataUrl;
     checklistState[key].fotoKey = null; // es una foto nueva, aún no tiene clave subida
     renderChecklistPhoto(key);
-  });
+  }, lineas);
   input.value = '';
 }
 function delChecklistFoto(key){

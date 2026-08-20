@@ -170,6 +170,15 @@
     <!-- CHECKLIST -->
     <div id="blockChecklist" class="hidden">
       <div class="section-label"><span class="num">4</span>Checklist de inspección</div>
+      <div class="card">
+        <label>Tipo de inspección</label>
+        <select id="tipoInspeccionSel" onchange="tipoInspeccion = this.value || null">
+          <option value="">Seleccionar...</option>
+          <option>Rack</option>
+          <option>Tablero</option>
+          <option>Datacenter</option>
+        </select>
+      </div>
       <div id="checklistWrap"></div>
     </div>
 
