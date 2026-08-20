@@ -7,11 +7,15 @@ function dibujarMarcaAgua(ctx, canvas, lineas){
   const fontSize = Math.max(13, Math.round(canvas.width * 0.032));
   const lineHeight = Math.round(fontSize * 1.35);
   const padding = Math.round(fontSize * 0.6);
+  ctx.font = fontSize + 'px sans-serif';
+  // El recuadro se ajusta al ancho de la línea más larga (con un tope del
+  // ancho de la foto), en vez de ocupar siempre todo el ancho de la imagen.
+  const anchoTexto = Math.max(...validas.map(l => ctx.measureText(l).width));
+  const boxWidth = Math.min(canvas.width, Math.ceil(anchoTexto) + padding * 2);
   const boxHeight = lineHeight * validas.length + padding * 2;
   ctx.fillStyle = 'rgba(10, 37, 64, 0.72)'; // navy Netmask translúcido
-  ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
+  ctx.fillRect(0, canvas.height - boxHeight, boxWidth, boxHeight);
   ctx.fillStyle = '#ffffff';
-  ctx.font = fontSize + 'px sans-serif';
   ctx.textBaseline = 'top';
   validas.forEach((linea, i) => {
     ctx.fillText(linea, padding, canvas.height - boxHeight + padding + i * lineHeight);
