@@ -37,11 +37,29 @@ function renderActivos(){
             <option value="__add__">+ Agregar nuevo tipo...</option>
           </select>
         </div>
-        <div><label>Marca</label><input type="text" value="${escapeHtml(a.marca)}" oninput="updateActivo('${a.uid}','marca',this.value)"></div>
+        <div>
+          <label>Marca</label>
+          <div class="input-with-ocr">
+            <input type="text" id="marca-${a.uid}" value="${escapeHtml(a.marca)}" oninput="updateActivo('${a.uid}','marca',this.value)">
+            ${ocrButtonHtml('marca-'+a.uid)}
+          </div>
+        </div>
       </div>
       <div class="field-row">
-        <div><label>Modelo</label><input type="text" value="${escapeHtml(a.modelo)}" oninput="updateActivo('${a.uid}','modelo',this.value)"></div>
-        <div><label>Serial</label><input type="text" value="${escapeHtml(a.serial)}" oninput="updateActivo('${a.uid}','serial',this.value)"></div>
+        <div>
+          <label>Modelo</label>
+          <div class="input-with-ocr">
+            <input type="text" id="modelo-${a.uid}" value="${escapeHtml(a.modelo)}" oninput="updateActivo('${a.uid}','modelo',this.value)">
+            ${ocrButtonHtml('modelo-'+a.uid)}
+          </div>
+        </div>
+        <div>
+          <label>Serial</label>
+          <div class="input-with-ocr">
+            <input type="text" id="serial-${a.uid}" value="${escapeHtml(a.serial)}" oninput="updateActivo('${a.uid}','serial',this.value)">
+            ${ocrButtonHtml('serial-'+a.uid)}
+          </div>
+        </div>
       </div>
       <div class="field-row">
         <div><label>Tag / identificador</label><input type="text" value="${escapeHtml(a.tag)}" oninput="updateActivo('${a.uid}','tag',this.value)"></div>
