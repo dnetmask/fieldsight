@@ -1,5 +1,14 @@
 function addActivo(){
-  activos.push({uid:newUid(), area:'', proceso:'', maquina:'', ubicacion:'', nombre:'', tipo:'', marca:'', modelo:'', serial:'', tag:'', tablero:'', estado:'', obs:'', otRed:'', protocolo:'', ip:'', mac:'', fotos:[], catSel:CAT_ACTIVO[0]});
+  // Área y Proceso se repiten casi siempre entre activos consecutivos de la
+  // misma visita — se heredan del último agregado para no tener que
+  // volver a escribirlos cada vez (el técnico los cambia si corresponde).
+  const anterior = activos[activos.length - 1];
+  activos.push({
+    uid:newUid(),
+    area: anterior ? anterior.area : '',
+    proceso: anterior ? anterior.proceso : '',
+    maquina:'', ubicacion:'', nombre:'', tipo:'', marca:'', modelo:'', serial:'', tag:'', tablero:'', estado:'', obs:'', otRed:'', protocolo:'', ip:'', mac:'', fotos:[], catSel:CAT_ACTIVO[0]
+  });
   renderActivos();
 }
 function removeActivo(uid){
