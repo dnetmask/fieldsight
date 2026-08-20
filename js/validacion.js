@@ -6,9 +6,21 @@ function validarMAC(v){
   if(!v) return true;
   return /^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/.test(v.trim());
 }
+// Reformatea a mayúsculas y con ":" cada 2 caracteres mientras se escribe,
+// para no depender de que el técnico teclee el formato exacto a mano.
+function formatearMAC(v){
+  const hex = v.toUpperCase().replace(/[^0-9A-F]/g, '').slice(0, 12);
+  return hex.replace(/(.{2})(?=.)/g, '$1:');
+}
 function onCampoRedInput(uid, field, el){
-  updateActivo(uid, field, el.value);
-  const ok = field==='ip' ? validarIP(el.value) : validarMAC(el.value);
+  let valor = el.value;
+  if(field === 'mac'){
+    valor = formatearMAC(valor);
+    el.value = valor;
+    el.setSelectionRange(valor.length, valor.length);
+  }
+  updateActivo(uid, field, valor);
+  const ok = field==='ip' ? validarIP(valor) : validarMAC(valor);
   el.classList.toggle('input-invalid', !ok);
 }
 
