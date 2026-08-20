@@ -22,3 +22,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+/* ---------------------------------------------------------
+   BORRADOR AUTOMÁTICO — cada 30s, solo si hay algo que valga la
+   pena guardar y el formulario está a la vista (no en Historial).
+--------------------------------------------------------- */
+setInterval(() => {
+  const formView = document.getElementById('formView');
+  if(!formView || formView.classList.contains('hidden')) return;
+  const hayContenido = tipoSel || document.getElementById('fProyecto').value.trim() || document.getElementById('fSede').value.trim();
+  if(hayContenido) guardarBorradorActual();
+}, 30 * 1000);
+

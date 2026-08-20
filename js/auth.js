@@ -71,6 +71,7 @@ async function cargarSesion(session){
   await cargarCatalogoProtocolos();
   renderChecklist();
   goForm();
+  await restaurarBorradorSiExiste();
 }
 async function cerrarSesion(){
   if(!confirm('¿Cerrar sesión?')) return;
