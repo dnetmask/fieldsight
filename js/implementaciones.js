@@ -36,11 +36,29 @@ function renderImpl(){
         <div><label>Equipo — tipo</label><input type="text" value="${escapeHtml(it.eqTipo)}" oninput="updateImpl('${it.uid}','eqTipo',this.value)"></div>
       </div>
       <div class="field-row">
-        <div><label>Marca</label><input type="text" value="${escapeHtml(it.eqMarca)}" oninput="updateImpl('${it.uid}','eqMarca',this.value)"></div>
-        <div><label>Modelo</label><input type="text" value="${escapeHtml(it.eqModelo)}" oninput="updateImpl('${it.uid}','eqModelo',this.value)"></div>
+        <div>
+          <label>Marca</label>
+          <div class="input-with-ocr">
+            <input type="text" id="eqMarca-${it.uid}" value="${escapeHtml(it.eqMarca)}" oninput="updateImpl('${it.uid}','eqMarca',this.value)">
+            ${ocrButtonHtml('eqMarca-'+it.uid)}
+          </div>
+        </div>
+        <div>
+          <label>Modelo</label>
+          <div class="input-with-ocr">
+            <input type="text" id="eqModelo-${it.uid}" value="${escapeHtml(it.eqModelo)}" oninput="updateImpl('${it.uid}','eqModelo',this.value)">
+            ${ocrButtonHtml('eqModelo-'+it.uid)}
+          </div>
+        </div>
       </div>
       <div class="field-row">
-        <div><label>Serial</label><input type="text" value="${escapeHtml(it.eqSerial)}" oninput="updateImpl('${it.uid}','eqSerial',this.value)"></div>
+        <div>
+          <label>Serial</label>
+          <div class="input-with-ocr">
+            <input type="text" id="eqSerial-${it.uid}" value="${escapeHtml(it.eqSerial)}" oninput="updateImpl('${it.uid}','eqSerial',this.value)">
+            ${ocrButtonHtml('eqSerial-'+it.uid)}
+          </div>
+        </div>
         <div><label>Rack / tablero asociado</label><input type="text" value="${escapeHtml(it.eqTablero)}" oninput="updateImpl('${it.uid}','eqTablero',this.value)"></div>
       </div>
       <label>Ubicación</label>
