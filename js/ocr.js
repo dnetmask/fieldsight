@@ -6,6 +6,12 @@
 --------------------------------------------------------- */
 let _tesseractWorkerPromise = null;
 
+// DEBUG TEMPORAL: agrega ?ocrdebug=1 a la URL para ver, en cada foto, la
+// imagen ya preprocesada y el texto crudo que detecta Tesseract. Quitar
+// este bloque (y los que dicen "DEBUG TEMPORAL" más abajo) cuando el OCR
+// quede afinado.
+window.OCR_DEBUG = new URLSearchParams(location.search).get('ocrdebug') === '1';
+
 function ensureTesseractScript(){
   return new Promise((resolve, reject) => {
     if(window.Tesseract){ resolve(); return; }
@@ -101,6 +107,14 @@ async function handleOcrCapture(fileInput, targetInputId){
     const worker = await ensureTesseractWorker();
     const canvas = await prepararImagenParaOcr(file);
     const { data } = await worker.recognize(canvas);
+
+    // --- DEBUG TEMPORAL: quitar cuando el OCR quede afinado ---
+    if(window.OCR_DEBUG){
+      window.open(canvas.toDataURL('image/png'), '_blank');
+      alert('DEBUG\nTexto crudo: ' + JSON.stringify(data.text) + '\nConfianza: ' + Math.round(data.confidence) + '\nTamaño foto: ' + canvas.width + 'x' + canvas.height);
+    }
+    // --- FIN DEBUG ---
+
     const lineas = (data.text || '').split('\n').map(l => l.trim()).filter(Boolean);
     if(!lineas.length){
       alert('No se detectó texto en la foto. Intenta con más luz y de más cerca, o escribe el valor manualmente.');
