@@ -31,7 +31,9 @@ fieldsight/
 ├── deploy/
 │   ├── azure/               # Azure App Service (Windows o Linux)
 │   ├── netlify/             # Netlify Drop
-│   └── docker/              # Contenedor Docker (hosting interno Netmask)
+│   └── docker/
+│       ├── ...              # Contenedor de la app (hosting interno Netmask)
+│       └── supabase/        # Supabase auto-hospedado (backend, opcional)
 └── docs/
     ├── PRD.md               # documento de producto (texto plano)
     └── FieldSight_PRD.docx  # versión formateada del PRD
