@@ -5,6 +5,7 @@ let tipoSel = null; // 'activos' | 'implementacion' | 'inspeccion' | null
 let activos = [];
 let implementaciones = [];
 let checklistState = {};
+let tipoInspeccion = null; // 'Rack' | 'Tablero' | 'Datacenter' | null — una sola vez por visita
 let gpsActual = null;
 let sigDrawing = false;
 let currentDetailId = null;

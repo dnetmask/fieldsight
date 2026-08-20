@@ -96,6 +96,7 @@ async function guardarVisita(){
       activos: activosOut,
       implementaciones: implOut,
       checklist: checklistOut,
+      tipoInspeccion: tipoSel === 'inspeccion' ? tipoInspeccion : null,
       observaciones: document.getElementById('fObs').value.trim(),
       firma: {
         nombre: document.getElementById('sigNombre').value.trim(),
@@ -172,6 +173,8 @@ function resetForm(){
   activos = []; renderActivos();
   implementaciones = []; renderImpl();
   checklistState = {}; renderChecklist();
+  tipoInspeccion = null;
+  document.getElementById('tipoInspeccionSel').value = '';
   limpiarFirma();
   editingId = null; editingCodigo = null; editingCreatedAt = null;
   document.getElementById('editBanner').classList.add('hidden');
