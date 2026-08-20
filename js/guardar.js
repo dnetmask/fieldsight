@@ -154,6 +154,7 @@ function cancelarEdicion(){
 }
 
 function resetForm(){
+  borrarBorrador().catch(()=>{});
   document.getElementById('fProyecto').value='';
   document.getElementById('fCliente').value='';
   document.getElementById('fSede').value='';
