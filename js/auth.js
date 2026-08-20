@@ -72,6 +72,8 @@ async function cargarSesion(session){
   renderChecklist();
   goForm();
   await restaurarBorradorSiExiste();
+  await actualizarBarraSync();
+  intentarSincronizarPendientes(false);
 }
 async function cerrarSesion(){
   if(!confirm('¿Cerrar sesión?')) return;

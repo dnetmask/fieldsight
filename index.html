@@ -75,6 +75,16 @@
       <div class="tab" id="tabNew" onclick="goForm()">Nueva visita</div>
       <div class="tab" id="tabHist" onclick="goHistory()">Historial</div>
     </div>
+    <div class="sync-bar hidden" id="syncBar">
+      <span id="syncBarText"></span>
+      <div class="sync-bar-actions">
+        <button type="button" onclick="intentarSincronizarPendientes(true)">Sincronizar ahora</button>
+        <label class="sync-bar-toggle">
+          <input type="checkbox" id="chkPausarDatos" onchange="setSincronizacionPausada(this.checked); actualizarBarraSync();">
+          Pausar con datos móviles
+        </label>
+      </div>
+    </div>
   </div>
 
   <!-- ===================== FORM VIEW ===================== -->
@@ -266,6 +276,7 @@
 <script src="js/checklist.js"></script>
 <script src="js/firma.js"></script>
 <script src="js/borrador.js"></script>
+<script src="js/offline.js"></script>
 <script src="js/guardar.js"></script>
 <script src="js/historial.js"></script>
 <script src="js/detalle.js"></script>
