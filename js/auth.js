@@ -9,6 +9,7 @@ function mostrarAuth(){
   document.getElementById('formView').classList.add('hidden');
   document.getElementById('historyView').classList.add('hidden');
   document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('adminView').classList.add('hidden');
 }
 function toggleAuthMode(){
   authModoRegistro = !authModoRegistro;
@@ -66,6 +67,7 @@ async function cargarSesion(session){
   document.getElementById('brandUserLabel').textContent = currentProfile.nombre + ' · ' + currentProfile.rol;
   document.querySelector('.topbar').classList.remove('hidden');
   document.getElementById('authView').classList.add('hidden');
+  document.getElementById('btnAdmin').classList.toggle('hidden', currentProfile.rol !== 'administrador');
 
   await cargarCatalogoTipos();
   await cargarCatalogoProtocolos();

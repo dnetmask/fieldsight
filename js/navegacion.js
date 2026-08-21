@@ -6,12 +6,14 @@ function goForm(){
   document.getElementById('formView').classList.remove('hidden');
   document.getElementById('historyView').classList.add('hidden');
   document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('adminView').classList.add('hidden');
   setTabs('new');
 }
 function goHistory(){
   document.getElementById('formView').classList.add('hidden');
   document.getElementById('historyView').classList.remove('hidden');
   document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('adminView').classList.add('hidden');
   setTabs('hist');
   cargarHistorial();
 }
@@ -19,7 +21,16 @@ function goDetail(id){
   document.getElementById('formView').classList.add('hidden');
   document.getElementById('historyView').classList.add('hidden');
   document.getElementById('detailView').classList.remove('hidden');
+  document.getElementById('adminView').classList.add('hidden');
   mostrarDetalle(id);
+}
+function goAdmin(){
+  document.getElementById('formView').classList.add('hidden');
+  document.getElementById('historyView').classList.add('hidden');
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('adminView').classList.remove('hidden');
+  setTabs('');
+  cargarUsuarios();
 }
 
 /* ---------------------------------------------------------
