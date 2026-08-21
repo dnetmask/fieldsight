@@ -6,6 +6,12 @@
 # (mismo patrón que docker-compose.backup.yml).
 # Ver deploy/docker/LEEME-MIGRACION-VM-SIN-DOMINIO.md.
 #
+# También le quita a supavisor (el "pooler") los puertos 5432/6543
+# publicados directo en el host -- no los necesitamos (la app nunca se
+# conecta a Postgres directo, siempre por la API HTTP a través del
+# gateway) y suelen chocar con otro Postgres/contenedor que ya use el
+# 5432 estándar en el servidor.
+#
 # Uso:
 #   docker compose -f docker-compose.yml -f docker-compose.gateway-network.yml up -d
 
@@ -14,6 +20,9 @@ services:
     networks:
       - default
       - fieldsight_public
+
+  supavisor:
+    ports: !reset []
 
 networks:
   fieldsight_public:
