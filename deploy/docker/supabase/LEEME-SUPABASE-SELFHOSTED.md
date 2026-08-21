@@ -86,6 +86,53 @@ En `js/config.js` de la app:
 - `SUPABASE_ANON_KEY` → el `ANON_KEY` (o `SUPABASE_PUBLISHABLE_KEY`) que
   generó `utils/generate-keys.sh` — revísalo con `sh run.sh secrets`.
 
+## Correo (SMTP) — confirmación y recuperación de contraseña
+
+Por defecto, `SMTP_HOST=supabase-mail` en `.env.example` es un
+placeholder que **no existe** — sin cambiarlo, cualquier correo real
+(confirmación de registro, "olvidé mi contraseña") se queda sin enviar.
+FieldSight ya tiene el flujo de recuperación de contraseña implementado
+en la app (`js/auth.js` — enlace "¿Olvidaste tu contraseña?" en el
+login); lo que falta es conectar un SMTP real para que el correo
+efectivamente llegue.
+
+Decidido con el usuario: usar el correo corporativo de Netmask
+(**Microsoft 365**). En `.env`:
+
+```
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_USER=notificaciones@netmask.co   # una cuenta dedicada, no la de una persona
+SMTP_PASS=...                          # ver advertencia abajo
+SMTP_ADMIN_EMAIL=notificaciones@netmask.co
+SMTP_SENDER_NAME=FieldSight
+```
+
+**Advertencia importante**: Microsoft desactivó por defecto la
+autenticación SMTP básica (usuario + contraseña normal) en Exchange
+Online para todos los tenants desde 2022 — con esa configuración por
+defecto, esto simplemente no va a conectar. Antes de usarlo, pide a
+quien administre M365 en Netmask que:
+1. Reactive **SMTP AUTH** específicamente para la cuenta
+   `notificaciones@netmask.co` (se puede permitir por cuenta aunque el
+   resto del tenant lo tenga desactivado).
+2. Genere una **contraseña de aplicación** para esa cuenta (requiere
+   tener el MFA "clásico" activado en esa cuenta — no funciona con
+   "Valores predeterminados de seguridad"/Security Defaults, hay que
+   revisar cuál usa el tenant). Esa contraseña de aplicación es la que va
+   en `SMTP_PASS`, no la contraseña normal de la cuenta.
+
+Si esto no cuaja con la política de seguridad de M365 de Netmask, la
+alternativa más simple es un servicio transaccional dedicado (Resend,
+SendGrid, Amazon SES) — no tienen esta limitación y casi siempre alcanza
+con el plan gratuito para el volumen de correos que necesita esta app.
+
+Con `ENABLE_EMAIL_AUTOCONFIRM=true` (como quedó en las pruebas) el
+registro no necesita este SMTP para funcionar — solo lo necesita
+"olvidé mi contraseña". Si más adelante deciden exigir confirmación de
+correo al registrarse, cambien esa variable a `false` (ahí sí todo
+registro nuevo depende del SMTP).
+
 ## Backups
 
 Quedan en `./backups` (diarios, se retienen 14 días / 8 semanas / 6 meses

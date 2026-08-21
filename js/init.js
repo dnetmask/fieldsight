@@ -14,10 +14,30 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // El enlace de "recuperar contraseña" del correo trae el token en la URL:
+  // supabase-js lo detecta al cargar y dispara PASSWORD_RECOVERY -- pero
+  // ese enlace también deja una sesión válida, así que si no se avisa esto
+  // aparte, el getSession() de abajo la toma como un login normal y manda
+  // derecho al formulario, pisando la pantalla de "nueva contraseña".
+  // PASSWORD_RECOVERY llega unos milisegundos DESPUÉS de que getSession()
+  // ya resolvió (parece ser parte del mismo procesamiento interno del
+  // cliente, pero no está listo todavía en el momento exacto en que
+  // getSession() devuelve el control) -- por eso no basta revisar la
+  // bandera aquí mismo; cargarSesion() la vuelve a revisar más tarde,
+  // después de sus propias llamadas de red, que le dan tiempo de sobra
+  // a este evento para llegar antes de decidir si mostrar el formulario.
+  window.__modoRecuperacionActivo = false;
+  supabaseClient.auth.onAuthStateChange((event) => {
+    if(event === 'PASSWORD_RECOVERY'){
+      window.__modoRecuperacionActivo = true;
+      mostrarPantallaNuevaPassword();
+    }
+  });
+
   const { data:{ session } } = await supabaseClient.auth.getSession();
   if(session){
     await cargarSesion(session);
-  } else {
+  } else if(!window.__modoRecuperacionActivo){
     mostrarAuth();
   }
 });
