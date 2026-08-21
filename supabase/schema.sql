@@ -7,6 +7,7 @@
 create table public.profiles (
   id uuid references auth.users(id) on delete cascade primary key,
   nombre text not null,
+  email text,
   rol text not null default 'tecnico' check (rol in ('administrador','supervisor','tecnico')),
   activo boolean not null default true,
   created_at timestamptz not null default now()
@@ -20,8 +21,8 @@ $$ language sql stable security definer;
 -- Crea automáticamente el perfil cuando alguien se registra
 create function public.handle_new_user() returns trigger as $$
 begin
-  insert into public.profiles (id, nombre, rol)
-  values (new.id, coalesce(new.raw_user_meta_data->>'nombre', new.email), 'tecnico');
+  insert into public.profiles (id, nombre, rol, email)
+  values (new.id, coalesce(new.raw_user_meta_data->>'nombre', new.email), 'tecnico', new.email);
   return new;
 end;
 $$ language plpgsql security definer;
@@ -73,6 +74,11 @@ alter table public.visitas enable row level security;
 -- cada quien solo edita el suyo.
 create policy "Ver perfiles" on public.profiles for select using (auth.uid() is not null);
 create policy "Editar mi perfil" on public.profiles for update using (auth.uid() = id);
+-- Necesaria para la pantalla de administración de usuarios: un
+-- administrador puede cambiar el rol de CUALQUIER perfil, no solo el
+-- suyo (la política anterior por sí sola no alcanza para eso).
+create policy "Administradores editan cualquier perfil" on public.profiles for update
+  using ( public.mi_rol() = 'administrador' );
 
 -- Catálogos: cualquier autenticado puede leer y agregar nuevas opciones.
 create policy "Ver tipos de activo" on public.catalogo_tipos_activo for select using (auth.uid() is not null);
@@ -109,8 +115,11 @@ create policy "Borrar fotos" on storage.objects for delete
 -- 1. Ve a Authentication → Providers → Email y, si quieres que los
 --    técnicos puedan entrar de inmediato sin confirmar correo,
 --    desactiva "Confirm email".
--- 2. El primer usuario que se registre en la app quedará con rol
---    'tecnico' por defecto. Para hacerlo administrador, ve a
---    Table Editor → profiles → edita su fila → cambia "rol" a
---    'administrador'.
+-- 2. Todo usuario nuevo queda con rol 'tecnico' por defecto. Los
+--    administradores pueden cambiar el rol de cualquiera desde la app
+--    (pantalla "Administrar usuarios", solo visible para ese rol) —
+--    pero como todavía no existe ningún administrador la primera vez,
+--    hay que crear el primero a mano: Table Editor → profiles → edita
+--    la fila de esa persona → cambia "rol" a 'administrador'. De ahí en
+--    adelante, ya no hace falta volver a tocar la base de datos para esto.
 -- =====================================================================
