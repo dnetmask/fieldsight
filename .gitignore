@@ -18,3 +18,6 @@ npm-debug.log*
 # Variables de entorno / secretos (si en el futuro se separan de config.js)
 .env
 .env.local
+
+# Certificado autofirmado generado por deploy/docker/gateway/generar-cert.sh
+deploy/docker/gateway/certs/

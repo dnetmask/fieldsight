@@ -1,0 +1,17 @@
+# Une el contenedor de la app a la red compartida "fieldsight_public",
+# para que el gateway único (deploy/docker/gateway/) pueda alcanzarlo por
+# nombre -- solo se usa en el escenario "sin dominio, un solo puerto".
+# Ver deploy/docker/LEEME-MIGRACION-VM-SIN-DOMINIO.md.
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.gateway-network.yml up -d --build
+
+services:
+  fieldsight:
+    networks:
+      - default
+      - fieldsight_public
+
+networks:
+  fieldsight_public:
+    external: true

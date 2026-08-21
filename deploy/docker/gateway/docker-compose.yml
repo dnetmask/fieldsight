@@ -1,0 +1,30 @@
+# Gateway único para el escenario "sin dominio, IP pública + un solo
+# puerto nateado". Reemplaza a los dos nginx separados (deploy/docker/
+# docker-compose.nginx.yml y el de deploy/docker/supabase/) para ese
+# caso -- ver deploy/docker/LEEME-MIGRACION-VM-SIN-DOMINIO.md.
+#
+# Requiere que la app y Supabase ya estén corriendo, cada uno unido a la
+# red externa "fieldsight_public" (ver docker-compose.gateway-network.yml
+# en deploy/docker/ y en deploy/docker/supabase/).
+#
+# Uso:
+#   docker network create fieldsight_public   # una sola vez
+#   sh generar-cert.sh TU_IP_PUBLICA           # una sola vez (o al renovar)
+#   docker compose up -d
+
+services:
+  gateway-nginx:
+    image: nginx:1.27-alpine
+    container_name: fieldsight-gateway
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    networks:
+      - fieldsight_public
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+
+networks:
+  fieldsight_public:
+    external: true
