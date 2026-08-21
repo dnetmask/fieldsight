@@ -20,6 +20,14 @@ que aceptarla manualmente (en Chrome: "Avanzado" → "Continuar a
 [IP] (no seguro)"). Después de aceptarla una vez, el navegador la
 recuerda para ese sitio.
 
+**Si alguien va a usar la app conectado a la red interna de Netmask**
+(wifi de oficina, no solo desde afuera): pruébalo primero por la IP
+pública desde adentro de esa red — algunos firewalls no dejan que el
+tráfico "rebote" así (*hairpin NAT*). Si no funciona, hay que entrar por
+la IP **interna** de la VM en ese caso — por eso `generar-cert.sh` (paso
+5) acepta más de una IP, para que el certificado sirva para ambas sin un
+segundo error de "la dirección no coincide".
+
 ## 0) Datos que necesitas antes de empezar
 
 - La **IP pública** de la VM.
@@ -86,7 +94,7 @@ docker compose -f docker-compose.yml -f docker-compose.gateway-network.yml up -d
 
 ```bash
 cd deploy/docker/gateway
-sh generar-cert.sh IP_PUBLICA
+sh generar-cert.sh IP_PUBLICA                  # o: sh generar-cert.sh IP_PUBLICA IP_INTERNA_VM
 docker compose up -d
 ```
 
