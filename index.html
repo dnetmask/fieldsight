@@ -43,6 +43,24 @@
         <div class="hint" id="authError" style="display:none;color:var(--red);"></div>
         <button class="btn btn-primary" id="btnAuthSubmit" onclick="submitAuth()" style="margin-top:6px;">Iniciar sesión</button>
         <button class="btn btn-ghost" onclick="toggleAuthMode()" style="margin-top:8px;" id="btnAuthToggle">¿No tienes cuenta? Regístrate</button>
+        <a href="#" onclick="mostrarRecuperarPassword();return false;" id="linkOlvidePassword" style="display:block;text-align:center;margin-top:12px;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <div id="authRecoveryWrap" class="hidden">
+        <label>Correo</label>
+        <input type="text" id="recoveryEmail" inputmode="email" placeholder="tu@correo.com">
+        <div class="hint" id="recoveryMsg" style="display:none;"></div>
+        <button class="btn btn-primary" id="btnRecoverySubmit" onclick="enviarRecuperacion()" style="margin-top:6px;">Enviar enlace de recuperación</button>
+        <button class="btn btn-ghost" onclick="ocultarRecuperarPassword()" style="margin-top:8px;">Volver a iniciar sesión</button>
+      </div>
+
+      <div id="authNewPasswordWrap" class="hidden">
+        <label>Nueva contraseña</label>
+        <input type="password" id="newPassword1" placeholder="••••••••">
+        <label>Confirma la nueva contraseña</label>
+        <input type="password" id="newPassword2" placeholder="••••••••">
+        <div class="hint" id="newPasswordError" style="display:none;color:var(--red);"></div>
+        <button class="btn btn-primary" id="btnNewPasswordSubmit" onclick="guardarNuevaPassword()" style="margin-top:6px;">Guardar nueva contraseña</button>
       </div>
     </div>
     <div class="hint" style="text-align:center;">Tus datos y los de tus compañeros de equipo se sincronizan de forma segura y compartida.</div>
