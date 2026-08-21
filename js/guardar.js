@@ -59,82 +59,53 @@ async function guardarVisita(){
   const id = editingId || ('vis_' + Date.now());
   const codigo = editingCodigo || ('FS-' + Date.now().toString().slice(-7));
 
-  let originalKeys = [];
-  if(esEdicion){
-    try{
-      const { data: prevRow } = await supabaseClient.from('visitas').select('data').eq('id', id).single();
-      if(prevRow) originalKeys = recolectarKeysDeReporte(prevRow.data || {});
-    }catch(e){}
+  // rawData conserva las fotos como dataUrl (aún sin subir) — es lo que se
+  // sube al servidor si hay conexión ahora, o lo que queda guardado en el
+  // teléfono (IndexedDB) si no la hay, para sincronizar después.
+  const rawData = {
+    gps: gpsActual,
+    activos,
+    implementaciones,
+    checklist: checklistState,
+    tipoInspeccion: tipoSel === 'inspeccion' ? tipoInspeccion : null,
+    observaciones: document.getElementById('fObs').value.trim(),
+    firma: {
+      nombre: document.getElementById('sigNombre').value.trim(),
+      cargo: document.getElementById('sigCargo').value.trim(),
+      dataUrl: firmaVacia() ? null : document.getElementById('sigCanvas').toDataURL('image/png')
+    }
+  };
+
+  const fila = {
+    id, codigo,
+    proyecto, cliente: document.getElementById('fCliente').value.trim(),
+    sede, tecnico: document.getElementById('fTecnico').value.trim(),
+    fecha: document.getElementById('fFecha').value || null,
+    tipo: tipoSel,
+    updated_by: currentUser.id,
+    actualizado_por_nombre: currentProfile.nombre,
+    updated_at: new Date().toISOString()
+  };
+  if(!esEdicion){
+    fila.created_by = currentUser.id;
+    fila.creado_por_nombre = currentProfile.nombre;
   }
 
   try{
-    let activosOut = [], implOut = [], checklistOut = {};
-
-    if(tipoSel === 'activos'){
-      activosOut = await subirFotosDeLista(activos, id, ['fotos']);
-    }
-    if(tipoSel === 'implementacion'){
-      implOut = await subirFotosDeLista(implementaciones, id, ['fotosAntes','fotosDespues']);
-    }
-    if(tipoSel === 'inspeccion'){
-      for(const key of Object.keys(checklistState)){
-        const st = checklistState[key];
-        const copia = {estado:st.estado, criticidad:st.criticidad, obs:st.obs, fotoKey:null};
-        if(st.fotoKey && st.foto){
-          copia.fotoKey = st.fotoKey; // ya estaba subida, no se toca
-        } else if(st.foto){
-          const fkey = id+'/'+newUid()+'.jpg';
-          await subirFotoBlob(fkey, st.foto);
-          copia.fotoKey = fkey;
-        }
-        checklistOut[key] = copia;
+    if(debeSincronizarAhora()){
+      try{
+        await subirVisitaCompleta(fila, rawData, esEdicion);
+        toast(esEdicion ? 'Visita actualizada ✓' : 'Visita guardada ✓ Código '+codigo);
+      }catch(err){
+        if(!esErrorDeConexion(err)) throw err;
+        await guardarVisitaLocal(fila, rawData, esEdicion);
+        toast('Sin conexión — guardada en el teléfono, se sincronizará sola ✓');
       }
-    }
-
-    const dataBlob = {
-      gps: gpsActual,
-      activos: activosOut,
-      implementaciones: implOut,
-      checklist: checklistOut,
-      observaciones: document.getElementById('fObs').value.trim(),
-      firma: {
-        nombre: document.getElementById('sigNombre').value.trim(),
-        cargo: document.getElementById('sigCargo').value.trim(),
-        dataUrl: firmaVacia() ? null : document.getElementById('sigCanvas').toDataURL('image/png')
-      }
-    };
-
-    const fila = {
-      id, codigo,
-      proyecto, cliente: document.getElementById('fCliente').value.trim(),
-      sede, tecnico: document.getElementById('fTecnico').value.trim(),
-      fecha: document.getElementById('fFecha').value || null,
-      tipo: tipoSel,
-      data: dataBlob,
-      updated_by: currentUser.id,
-      actualizado_por_nombre: currentProfile.nombre,
-      updated_at: new Date().toISOString()
-    };
-
-    let dbError;
-    if(esEdicion){
-      const { error } = await supabaseClient.from('visitas').update(fila).eq('id', id);
-      dbError = error;
     } else {
-      fila.created_by = currentUser.id;
-      fila.creado_por_nombre = currentProfile.nombre;
-      const { error } = await supabaseClient.from('visitas').insert(fila);
-      dbError = error;
+      await guardarVisitaLocal(fila, rawData, esEdicion);
+      toast('Guardada en el teléfono — se sincronizará cuando haya conexión ✓');
     }
-    if(dbError) throw new Error(dbError.message);
-
-    if(esEdicion && originalKeys.length){
-      const finalKeys = new Set(recolectarKeysDeReporte(dataBlob));
-      const orphaned = originalKeys.filter(k => !finalKeys.has(k));
-      if(orphaned.length){ try{ await supabaseClient.storage.from('fotos').remove(orphaned); }catch(e){} }
-    }
-
-    toast(esEdicion ? 'Visita actualizada ✓' : 'Visita guardada ✓ Código '+codigo);
+    await actualizarBarraSync();
     resetForm();
     goHistory();
   }catch(err){
@@ -153,6 +124,7 @@ function cancelarEdicion(){
 }
 
 function resetForm(){
+  borrarBorrador().catch(()=>{});
   document.getElementById('fProyecto').value='';
   document.getElementById('fCliente').value='';
   document.getElementById('fSede').value='';
@@ -172,6 +144,8 @@ function resetForm(){
   activos = []; renderActivos();
   implementaciones = []; renderImpl();
   checklistState = {}; renderChecklist();
+  tipoInspeccion = null;
+  document.getElementById('tipoInspeccionSel').value = '';
   limpiarFirma();
   editingId = null; editingCodigo = null; editingCreatedAt = null;
   document.getElementById('editBanner').classList.add('hidden');

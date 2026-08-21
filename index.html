@@ -75,6 +75,16 @@
       <div class="tab" id="tabNew" onclick="goForm()">Nueva visita</div>
       <div class="tab" id="tabHist" onclick="goHistory()">Historial</div>
     </div>
+    <div class="sync-bar hidden" id="syncBar">
+      <span id="syncBarText"></span>
+      <div class="sync-bar-actions">
+        <button type="button" onclick="intentarSincronizarPendientes(true)">Sincronizar ahora</button>
+        <label class="sync-bar-toggle">
+          <input type="checkbox" id="chkPausarDatos" onchange="setSincronizacionPausada(this.checked); actualizarBarraSync();">
+          Pausar con datos móviles
+        </label>
+      </div>
+    </div>
   </div>
 
   <!-- ===================== FORM VIEW ===================== -->
@@ -170,6 +180,15 @@
     <!-- CHECKLIST -->
     <div id="blockChecklist" class="hidden">
       <div class="section-label"><span class="num">4</span>Checklist de inspección</div>
+      <div class="card">
+        <label>Tipo de inspección</label>
+        <select id="tipoInspeccionSel" onchange="tipoInspeccion = this.value || null">
+          <option value="">Seleccionar...</option>
+          <option>Rack</option>
+          <option>Tablero</option>
+          <option>Datacenter</option>
+        </select>
+      </div>
       <div id="checklistWrap"></div>
     </div>
 
@@ -251,10 +270,13 @@
 <script src="js/navegacion.js"></script>
 <script src="js/gps.js"></script>
 <script src="js/fotos.js"></script>
+<script src="js/ocr.js"></script>
 <script src="js/activos.js"></script>
 <script src="js/implementaciones.js"></script>
 <script src="js/checklist.js"></script>
 <script src="js/firma.js"></script>
+<script src="js/borrador.js"></script>
+<script src="js/offline.js"></script>
 <script src="js/guardar.js"></script>
 <script src="js/historial.js"></script>
 <script src="js/detalle.js"></script>

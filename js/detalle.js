@@ -135,7 +135,8 @@ async function mostrarDetalle(id){
           </div>`;
         }
       }
-      checklistHtml = '<div class="section-label"><span class="num">C</span>Checklist de inspección</div><div class="card">'+rows+'</div>';
+      const tipoInspHtml = r.tipoInspeccion ? '<div style="margin-bottom:8px;"><b>Tipo de inspección:</b> '+escapeHtml(r.tipoInspeccion)+'</div>' : '';
+      checklistHtml = '<div class="section-label"><span class="num">C</span>Checklist de inspección</div><div class="card">'+tipoInspHtml+rows+'</div>';
     }
 
     wrap.innerHTML = `

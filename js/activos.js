@@ -1,5 +1,14 @@
 function addActivo(){
-  activos.push({uid:newUid(), area:'', proceso:'', maquina:'', ubicacion:'', nombre:'', tipo:'', marca:'', modelo:'', serial:'', tag:'', tablero:'', estado:'', obs:'', otRed:'', protocolo:'', ip:'', mac:'', fotos:[], catSel:CAT_ACTIVO[0]});
+  // Área y Proceso se repiten casi siempre entre activos consecutivos de la
+  // misma visita — se heredan del último agregado para no tener que
+  // volver a escribirlos cada vez (el técnico los cambia si corresponde).
+  const anterior = activos[activos.length - 1];
+  activos.push({
+    uid:newUid(),
+    area: anterior ? anterior.area : '',
+    proceso: anterior ? anterior.proceso : '',
+    maquina:'', ubicacion:'', nombre:'', tipo:'', marca:'', modelo:'', serial:'', tag:'', tablero:'', estado:'', obs:'', otRed:'', protocolo:'', ip:'', mac:'', fotos:[], catSel:CAT_ACTIVO[0]
+  });
   renderActivos();
 }
 function removeActivo(uid){
@@ -37,11 +46,29 @@ function renderActivos(){
             <option value="__add__">+ Agregar nuevo tipo...</option>
           </select>
         </div>
-        <div><label>Marca</label><input type="text" value="${escapeHtml(a.marca)}" oninput="updateActivo('${a.uid}','marca',this.value)"></div>
+        <div>
+          <label>Marca</label>
+          <div class="input-with-ocr">
+            <input type="text" id="marca-${a.uid}" value="${escapeHtml(a.marca)}" oninput="updateActivo('${a.uid}','marca',this.value)">
+            ${ocrButtonHtml('marca-'+a.uid)}
+          </div>
+        </div>
       </div>
       <div class="field-row">
-        <div><label>Modelo</label><input type="text" value="${escapeHtml(a.modelo)}" oninput="updateActivo('${a.uid}','modelo',this.value)"></div>
-        <div><label>Serial</label><input type="text" value="${escapeHtml(a.serial)}" oninput="updateActivo('${a.uid}','serial',this.value)"></div>
+        <div>
+          <label>Modelo</label>
+          <div class="input-with-ocr">
+            <input type="text" id="modelo-${a.uid}" value="${escapeHtml(a.modelo)}" oninput="updateActivo('${a.uid}','modelo',this.value)">
+            ${ocrButtonHtml('modelo-'+a.uid)}
+          </div>
+        </div>
+        <div>
+          <label>Serial</label>
+          <div class="input-with-ocr">
+            <input type="text" id="serial-${a.uid}" value="${escapeHtml(a.serial)}" oninput="updateActivo('${a.uid}','serial',this.value)">
+            ${ocrButtonHtml('serial-'+a.uid)}
+          </div>
+        </div>
       </div>
       <div class="field-row">
         <div><label>Tag / identificador</label><input type="text" value="${escapeHtml(a.tag)}" oninput="updateActivo('${a.uid}','tag',this.value)"></div>
