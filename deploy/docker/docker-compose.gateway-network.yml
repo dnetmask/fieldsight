@@ -3,11 +3,18 @@
 # nombre -- solo se usa en el escenario "sin dominio, un solo puerto".
 # Ver deploy/docker/LEEME-MIGRACION-VM-SIN-DOMINIO.md.
 #
+# También le quita el puerto 8080 publicado directo en el host -- en este
+# escenario el gateway único es la única puerta de entrada pública; la
+# app solo debe ser alcanzable por nombre de contenedor dentro de la red
+# compartida, no directo en el host (donde además puede chocar con otro
+# servicio que ya use el 8080).
+#
 # Uso:
 #   docker compose -f docker-compose.yml -f docker-compose.gateway-network.yml up -d --build
 
 services:
   fieldsight:
+    ports: !reset []
     networks:
       - default
       - fieldsight_public
