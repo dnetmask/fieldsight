@@ -1,0 +1,20 @@
+# Une el gateway de Supabase (api-gw) a la red compartida
+# "fieldsight_public", para que el gateway único de la app
+# (deploy/docker/gateway/) pueda alcanzarlo por nombre -- solo se usa en
+# el escenario "sin dominio, un solo puerto". No toca docker-compose.yml
+# ni los demás archivos oficiales de Supabase, es un override propio más
+# (mismo patrón que docker-compose.backup.yml).
+# Ver deploy/docker/LEEME-MIGRACION-VM-SIN-DOMINIO.md.
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.gateway-network.yml up -d
+
+services:
+  api-gw:
+    networks:
+      - default
+      - fieldsight_public
+
+networks:
+  fieldsight_public:
+    external: true
