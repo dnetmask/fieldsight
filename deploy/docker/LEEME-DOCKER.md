@@ -36,13 +36,31 @@ La app queda disponible en `http://localhost:8080` (o el host/puerto que
 mapee quien administre el servidor). Hay un endpoint `/healthz` para
 chequeos de salud (load balancer, Docker healthcheck, etc.).
 
-## 3) HTTPS
+## 3) HTTPS (producción / la VM de Netmask)
 
-El contenedor sirve solo HTTP en el puerto 8080. Para producción,
-FieldSight necesita HTTPS (login, geolocalización y cámara del navegador
-lo exigen) — hay que ponerlo detrás de un reverse proxy que termine TLS
-(nginx, Traefik, el API Management o Application Gateway que ya use
-Netmask, etc.). No lo resuelve esta imagen.
+El contenedor por sí solo sirve solo HTTP en el puerto 8080 — sirve para
+pruebas locales, pero FieldSight necesita HTTPS en producción (login,
+geolocalización y cámara del navegador lo exigen fuera de `localhost`).
+
+Para eso existe `docker-compose.nginx.yml`: agrega un nginx con
+certificado automático de Let's Encrypt (misma imagen que usa el nginx de
+Supabase en `deploy/docker/supabase/`, pero **totalmente independiente**
+— cada uno maneja su propio dominio y certificado por separado) y le
+quita el puerto 8080 directo (todo entra por HTTPS/443).
+
+```bash
+cd deploy/docker
+cp .env.example .env   # edita APP_DOMAIN y CERTBOT_EMAIL con los valores reales
+docker compose -f docker-compose.yml -f docker-compose.nginx.yml up --build -d
+```
+
+Requisitos antes de correrlo así:
+- El dominio en `APP_DOMAIN` (ej. `fieldsight.netmask.co`) debe tener un
+  registro DNS tipo A apuntando ya a la IP pública de la VM — Let's
+  Encrypt no emite el certificado si el dominio no resuelve ahí todavía.
+- Puertos 80 y 443 abiertos hacia la VM (80 lo necesita el proceso de
+  validación de Let's Encrypt, aunque todo el tráfico real termine yendo
+  por 443).
 
 ## 4) Después de desplegar
 

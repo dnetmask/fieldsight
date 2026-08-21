@@ -1,0 +1,36 @@
+# Override para producción (la VM): agrega un nginx+certbot delante de la
+# app y le quita el puerto 8080 directo al público (todo el tráfico entra
+# por nginx en 443). Para pruebas locales en el PC, no se usa este archivo
+# — ahí se sigue entrando directo por :8080 sin HTTPS, como hasta ahora.
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.nginx.yml up -d --build
+
+services:
+  fieldsight:
+    ports: !reset []
+
+  nginx:
+    image: jonasal/nginx-certbot:6.2.0-nginx1.31.3
+    container_name: fieldsight-nginx
+    restart: unless-stopped
+    depends_on:
+      - fieldsight
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PROXY_DOMAIN: ${APP_DOMAIN}
+      CERTBOT_EMAIL: ${CERTBOT_EMAIL}
+    command:
+      - /bin/bash
+      - -c
+      - |
+        envsubst '$${PROXY_DOMAIN}' < /etc/nginx/app-nginx.conf.tpl > /etc/nginx/user_conf.d/nginx.conf && \
+        /scripts/start_nginx_certbot.sh
+    volumes:
+      - ./nginx/app-nginx.conf.tpl:/etc/nginx/app-nginx.conf.tpl:ro
+      - nginx_letsencrypt:/etc/letsencrypt
+
+volumes:
+  nginx_letsencrypt:
