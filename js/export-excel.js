@@ -9,6 +9,46 @@ function ensureXLSX(){
   });
 }
 
+/* SheetJS Community no incrusta imágenes reales en el .xlsx (eso requiere
+   la versión Pro) -- en vez de eso, esta hoja deja cada foto organizada
+   con su referencia y un enlace directo (signed URL, válido 7 días) para
+   abrirla en el navegador con un clic. Las imágenes reales van en el
+   Word/PDF/ZIP. */
+async function agregarHojaFotos(wb, r){
+  const filas = [];
+  if(r.tipo === 'activos' && r.activos){
+    for(const a of r.activos){
+      for(const f of (a.fotos||[])) filas.push({ref: a.nombre||'Activo', cat: f.cat||'', key: f.key});
+    }
+  }
+  if(r.tipo === 'implementacion' && r.implementaciones){
+    for(const it of r.implementaciones){
+      for(const f of (it.fotosAntes||[])) filas.push({ref: it.eqNombre||'Equipo', cat: 'Antes · '+(f.cat||''), key: f.key});
+      for(const f of (it.fotosDespues||[])) filas.push({ref: it.eqNombre||'Equipo', cat: 'Después · '+(f.cat||''), key: f.key});
+    }
+  }
+  if(r.tipo === 'inspeccion' && r.checklist){
+    for(const clave of Object.keys(r.checklist)){
+      const st = r.checklist[clave];
+      if(st.fotoKey) filas.push({ref: clave.split('|')[1]||'Ítem', cat: clave.split('|')[0]||'', key: st.fotoKey});
+    }
+  }
+  if(!filas.length) return;
+
+  const aoa = [['#','Referencia','Categoría','Foto'], ...filas.map((f,i)=>[i+1, f.ref, f.cat, 'Abrir foto'])];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:5},{wch:28},{wch:24},{wch:16}];
+
+  for(let i=0;i<filas.length;i++){
+    const url = await enlaceFirmadoFoto(filas[i].key);
+    const addr = XLSX.utils.encode_cell({r:i+1, c:3});
+    ws[addr] = url
+      ? {t:'s', v:'Abrir foto', l:{Target:url, Tooltip:'Abrir foto (enlace válido 7 días)'}}
+      : {t:'s', v:'No disponible'};
+  }
+  XLSX.utils.book_append_sheet(wb, ws, 'Fotos');
+}
+
 async function exportarExcel(){
   if(!currentDetailId) return;
   const btn = document.getElementById('btnExcel');
@@ -62,7 +102,9 @@ async function exportarExcel(){
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...rows]), 'Checklist');
     }
 
-    XLSX.writeFile(wb, (r.codigo||'informe')+'.xlsx');
+    await agregarHojaFotos(wb, r);
+
+    XLSX.writeFile(wb, nombreInforme(r, 'xlsx'));
     toast('Excel generado ✓ revisa tus descargas');
   }catch(err){
     console.error(err);

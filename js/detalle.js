@@ -29,6 +29,14 @@ async function resolverFoto(key){
     });
   }catch(e){ return null; }
 }
+async function enlaceFirmadoFoto(key, expiresIn=604800){ // 7 días -- para enlaces en informes exportados (Excel)
+  if(!key) return null;
+  try{
+    const { data, error } = await supabaseClient.storage.from('fotos').createSignedUrl(key, expiresIn);
+    if(error || !data) return null;
+    return data.signedUrl;
+  }catch(e){ return null; }
+}
 async function resolverFotos(fotosArr){
   const out = [];
   for(const f of (fotosArr||[])){
@@ -36,6 +44,24 @@ async function resolverFotos(fotosArr){
     out.push({cat:f.cat, dataUrl});
   }
   return out;
+}
+
+/* Igual convención de nombre que Word/Excel (nombreInforme, js/utils.js):
+   el navegador usa document.title como nombre sugerido al "Guardar como PDF"
+   desde el diálogo de impresión. */
+async function imprimirInforme(){
+  const original = document.title;
+  try{
+    if(currentDetailId){
+      const { data: row } = await supabaseClient.from('visitas').select('*').eq('id', currentDetailId).single();
+      if(row){
+        const r = filaAVisita(row);
+        document.title = nombreInforme(r, 'pdf').replace(/\.pdf$/i, '');
+      }
+    }
+  }catch(e){ /* si falla, se imprime con el título por defecto */ }
+  window.addEventListener('afterprint', () => { document.title = original; }, {once:true});
+  window.print();
 }
 
 async function mostrarDetalle(id){
