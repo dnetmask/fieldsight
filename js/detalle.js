@@ -29,7 +29,7 @@ async function resolverFoto(key){
     });
   }catch(e){ return null; }
 }
-async function enlaceFirmadoFoto(key, expiresIn=604800){ // 7 días -- para enlaces en informes exportados (Excel)
+async function enlaceFirmadoFoto(key, expiresIn=NM_LINK_EXPIRES_SECONDS){ // para enlaces en informes exportados (Excel)
   if(!key) return null;
   try{
     const { data, error } = await supabaseClient.storage.from('fotos').createSignedUrl(key, expiresIn);

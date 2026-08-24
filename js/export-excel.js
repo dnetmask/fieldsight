@@ -35,15 +35,26 @@ async function agregarHojaFotos(wb, r){
   }
   if(!filas.length) return;
 
-  const aoa = [['#','Referencia','Categoría','Foto'], ...filas.map((f,i)=>[i+1, f.ref, f.cat, 'Abrir foto'])];
+  const vencimiento = new Date(Date.now() + NM_LINK_EXPIRES_SECONDS*1000);
+  const vencimientoTxt = vencimiento.toLocaleDateString('es-CO', {year:'numeric', month:'2-digit', day:'2-digit'});
+  const nota = `Estos enlaces vencen el ${vencimientoTxt}. Si ya no funcionan, comunícate con Netmask S.A.S.: contacto@netmask.co · WhatsApp +57 313 319 0566.`;
+
+  const filaEncabezado = 2; // nota (0) + fila en blanco (1) + encabezado (2)
+  const aoa = [
+    [nota, '', '', ''],
+    [],
+    ['#','Referencia','Categoría','Foto'],
+    ...filas.map((f,i)=>[i+1, f.ref, f.cat, 'Abrir foto'])
+  ];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges'] = [{s:{r:0,c:0}, e:{r:0,c:3}}];
   ws['!cols'] = [{wch:5},{wch:28},{wch:24},{wch:16}];
 
   for(let i=0;i<filas.length;i++){
     const url = await enlaceFirmadoFoto(filas[i].key);
-    const addr = XLSX.utils.encode_cell({r:i+1, c:3});
+    const addr = XLSX.utils.encode_cell({r:filaEncabezado+1+i, c:3});
     ws[addr] = url
-      ? {t:'s', v:'Abrir foto', l:{Target:url, Tooltip:'Abrir foto (enlace válido 7 días)'}}
+      ? {t:'s', v:'Abrir foto', l:{Target:url, Tooltip:`Abrir foto (enlace válido hasta el ${vencimientoTxt})`}}
       : {t:'s', v:'No disponible'};
   }
   XLSX.utils.book_append_sheet(wb, ws, 'Fotos');

@@ -11,13 +11,16 @@ function escapeHtml(s){
 function cssId(key){ return key.replace(/[^a-zA-Z0-9]/g,'_'); }
 
 /* Nombre de archivo estándar para los informes exportados (Word/Excel/PDF):
-   Cliente_TipoDeActividad_Fecha.ext — usa sanitizarNombre (js/export-zip.js). */
+   Cliente_Proyecto_Fecha.ext — usa sanitizarNombre (js/export-zip.js). */
 function nombreInforme(r, ext){
-  const tipoTxt = (TIPO_LABEL && TIPO_LABEL[r.tipo]) || r.tipo || 'Informe';
-  const partes = [r.cliente, tipoTxt, r.fecha].map(sanitizarNombre).filter(Boolean);
+  const partes = [r.cliente, r.proyecto, r.fecha].map(sanitizarNombre).filter(Boolean);
   const base = partes.length ? partes.join('_') : sanitizarNombre(r.codigo || 'FieldSight');
   return base + '.' + ext;
 }
+
+/* Vigencia de los enlaces firmados de fotos en el Excel exportado
+   (js/detalle.js, js/export-excel.js) -- 90 días. */
+const NM_LINK_EXPIRES_SECONDS = 90 * 24 * 60 * 60;
 
 /* ---------------------------------------------------------
    CATÁLOGO DE TIPOS DE ACTIVO (compartido entre técnicos)
