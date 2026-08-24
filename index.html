@@ -23,11 +23,8 @@
   <!-- ===================== AUTH VIEW (login / registro) ===================== -->
   <div class="view" id="authView" style="padding-top:60px;">
     <div style="text-align:center;margin-bottom:26px;">
-      <div style="width:52px;height:52px;border-radius:12px;background:var(--orange);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="28" height="28"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/></svg>
-      </div>
+      <img src="icons/Logo_Netmask_1500x300px.png" alt="Netmask S.A.S." style="width:220px;max-width:80%;height:auto;margin:0 auto 14px;display:block;">
       <div style="font-size:19px;font-weight:700;color:var(--navy);">FieldSight</div>
-      <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--ink-soft);">NETMASK S.A.S.</div>
     </div>
 
     <div class="card" id="authCard">
@@ -69,9 +66,7 @@
   <div class="topbar no-print">
     <div class="topbar-row">
       <div class="brand">
-        <div class="brand-mark">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#1a0e00" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/></svg>
-        </div>
+        <img class="brand-logo" src="icons/Logo_Netmask_1500x300px.png" alt="Netmask S.A.S.">
         <div class="brand-text">
           <div class="t1">FieldSight</div>
           <div class="t2" id="brandUserLabel">NETMASK S.A.S.</div>
@@ -265,7 +260,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
         Exportar Excel
       </button>
-      <button class="btn btn-dark" onclick="window.print()">
+      <button class="btn btn-dark" onclick="imprimirInforme()">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
         Imprimir / PDF
       </button>

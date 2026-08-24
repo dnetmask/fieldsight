@@ -9,6 +9,57 @@ function ensureXLSX(){
   });
 }
 
+/* SheetJS Community no incrusta imágenes reales en el .xlsx (eso requiere
+   la versión Pro) -- en vez de eso, esta hoja deja cada foto organizada
+   con su referencia y un enlace directo (signed URL, válido 7 días) para
+   abrirla en el navegador con un clic. Las imágenes reales van en el
+   Word/PDF/ZIP. */
+async function agregarHojaFotos(wb, r){
+  const filas = [];
+  if(r.tipo === 'activos' && r.activos){
+    for(const a of r.activos){
+      for(const f of (a.fotos||[])) filas.push({ref: a.nombre||'Activo', cat: f.cat||'', key: f.key});
+    }
+  }
+  if(r.tipo === 'implementacion' && r.implementaciones){
+    for(const it of r.implementaciones){
+      for(const f of (it.fotosAntes||[])) filas.push({ref: it.eqNombre||'Equipo', cat: 'Antes · '+(f.cat||''), key: f.key});
+      for(const f of (it.fotosDespues||[])) filas.push({ref: it.eqNombre||'Equipo', cat: 'Después · '+(f.cat||''), key: f.key});
+    }
+  }
+  if(r.tipo === 'inspeccion' && r.checklist){
+    for(const clave of Object.keys(r.checklist)){
+      const st = r.checklist[clave];
+      if(st.fotoKey) filas.push({ref: clave.split('|')[1]||'Ítem', cat: clave.split('|')[0]||'', key: st.fotoKey});
+    }
+  }
+  if(!filas.length) return;
+
+  const vencimiento = new Date(Date.now() + NM_LINK_EXPIRES_SECONDS*1000);
+  const vencimientoTxt = vencimiento.toLocaleDateString('es-CO', {year:'numeric', month:'2-digit', day:'2-digit'});
+  const nota = `Estos enlaces vencen el ${vencimientoTxt}. Si ya no funcionan, comunícate con Netmask S.A.S.: contacto@netmask.co · WhatsApp +57 313 319 0566.`;
+
+  const filaEncabezado = 2; // nota (0) + fila en blanco (1) + encabezado (2)
+  const aoa = [
+    [nota, '', '', ''],
+    [],
+    ['#','Referencia','Categoría','Foto'],
+    ...filas.map((f,i)=>[i+1, f.ref, f.cat, 'Abrir foto'])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges'] = [{s:{r:0,c:0}, e:{r:0,c:3}}];
+  ws['!cols'] = [{wch:5},{wch:28},{wch:24},{wch:16}];
+
+  for(let i=0;i<filas.length;i++){
+    const url = await enlaceFirmadoFoto(filas[i].key);
+    const addr = XLSX.utils.encode_cell({r:filaEncabezado+1+i, c:3});
+    ws[addr] = url
+      ? {t:'s', v:'Abrir foto', l:{Target:url, Tooltip:`Abrir foto (enlace válido hasta el ${vencimientoTxt})`}}
+      : {t:'s', v:'No disponible'};
+  }
+  XLSX.utils.book_append_sheet(wb, ws, 'Fotos');
+}
+
 async function exportarExcel(){
   if(!currentDetailId) return;
   const btn = document.getElementById('btnExcel');
@@ -62,7 +113,9 @@ async function exportarExcel(){
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...rows]), 'Checklist');
     }
 
-    XLSX.writeFile(wb, (r.codigo||'informe')+'.xlsx');
+    await agregarHojaFotos(wb, r);
+
+    XLSX.writeFile(wb, nombreInforme(r, 'xlsx'));
     toast('Excel generado ✓ revisa tus descargas');
   }catch(err){
     console.error(err);
