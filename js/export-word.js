@@ -1,5 +1,23 @@
 const NM_NAVY = '0A2540';
 const NM_BLUE = '0072CE';
+const NM_LOGO_PATH = 'icons/Logo_Netmask_1500x300px.png';
+const NM_CONTACTO_LINEA = 'contacto@netmask.co · WhatsApp +57 313 319 0566 · Medellín (604) 444 36 11 · Cl. 38 Sur #47a-21 Ofi 201';
+
+let _logoDataUrlCache = null;
+async function cargarLogoDataUrl(){
+  if(_logoDataUrlCache) return _logoDataUrlCache;
+  try{
+    const resp = await fetch(NM_LOGO_PATH);
+    const blob = await resp.blob();
+    _logoDataUrlCache = await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = reject;
+      fr.readAsDataURL(blob);
+    });
+  }catch(e){ console.error('No se pudo cargar el logo para el Word', e); _logoDataUrlCache = null; }
+  return _logoDataUrlCache;
+}
 
 function ensureJSZip(){
   return new Promise((resolve, reject) => {
@@ -25,6 +43,7 @@ function docxP(text, opts={}){
 function docxH1(text){ return docxP(text, {bold:true, size:36, color:NM_NAVY, spacingBefore:120, spacingAfter:160, borderColor:NM_BLUE}); }
 function docxH2(text){ return docxP(text, {bold:true, size:26, color:NM_BLUE, spacingBefore:220, spacingAfter:120}); }
 function docxH3(text){ return docxP(text, {bold:true, size:22, color:NM_NAVY, spacingBefore:180, spacingAfter:100}); }
+function docxPageBreak(){ return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>'; }
 
 function docxKV(rows, colWidths=[2500,6500]){
   const trs = rows.map(([k,v]) => `
@@ -77,10 +96,16 @@ function crearDocxBuilder(){
     },
     async build(){
       await ensureJSZip();
-      bodyXml += `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080"/></w:sectPr>`;
+      bodyXml += `<w:sectPr><w:footerReference w:type="default" r:id="rIdFooter1"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080"/></w:sectPr>`;
       const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
 <w:body>${bodyXml}</w:body></w:document>`;
+
+      const footerXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="4" w:space="4" w:color="D7DCE2"/></w:pBdr><w:jc w:val="center"/><w:spacing w:before="60" w:after="20"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:b/><w:color w:val="${NM_NAVY}"/><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve">NETMASK S.A.S. · INDUSTRIAL NETWORKING</w:t></w:r></w:p>
+<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:color w:val="5B6470"/><w:sz w:val="15"/></w:rPr><w:t xml:space="preserve">${xmlEsc(NM_CONTACTO_LINEA)}</w:t></w:r></w:p>
+</w:ftr>`;
 
       const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -90,6 +115,7 @@ function crearDocxBuilder(){
 <Default Extension="png" ContentType="image/png"/>
 <Default Extension="gif" ContentType="image/gif"/>
 <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>
 </Types>`;
 
       const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -99,6 +125,7 @@ function crearDocxBuilder(){
 
       const docRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rIdFooter1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>
 ${mediaFiles.map(m => `<Relationship Id="rId${m.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${m.rId}.${m.ext}"/>`).join('\n')}
 </Relationships>`;
 
@@ -106,6 +133,7 @@ ${mediaFiles.map(m => `<Relationship Id="rId${m.rId}" Type="http://schemas.openx
       zip.file('[Content_Types].xml', contentTypes);
       zip.file('_rels/.rels', rootRels);
       zip.file('word/document.xml', documentXml);
+      zip.file('word/footer1.xml', footerXml);
       zip.file('word/_rels/document.xml.rels', docRels);
       mediaFiles.forEach(m => zip.file(`word/media/image${m.rId}.${m.ext}`, m.base64, {base64:true}));
 
@@ -179,6 +207,42 @@ async function agregarChecklistAWord(b, r){
   }
 }
 
+function construirIndice(r){
+  const items = ['Datos generales'];
+  if(r.tipo === 'activos') items.push('Activos levantados');
+  if(r.tipo === 'implementacion') items.push('Implementación antes / después');
+  if(r.tipo === 'inspeccion') items.push('Checklist de inspección');
+  if(r.observaciones) items.push('Observaciones generales');
+  items.push('Firma');
+  return items;
+}
+
+async function agregarPortadaAWord(b, r){
+  const logo = await cargarLogoDataUrl();
+  if(logo) await b.addImage(logo, null, 380);
+  b.addRaw(docxP(' ', {size:10, spacingAfter:400}));
+  b.addRaw(docxP('INFORME DE VISITA TÉCNICA', {bold:true, size:40, color:NM_NAVY, alignment:'center', spacingAfter:60}));
+  b.addRaw(docxP(TIPO_LABEL[r.tipo]||r.tipo||'', {bold:true, size:24, color:NM_BLUE, alignment:'center', spacingAfter:500}));
+  b.addRaw(docxKV([
+    ['Cliente', r.cliente],
+    ['Fecha', r.fecha],
+    ['Tipo de servicio', TIPO_LABEL[r.tipo]||r.tipo],
+    ['Proyecto', r.proyecto],
+    ['Sede', r.sede],
+    ['Técnico', r.tecnico],
+    ['Código de visita', r.codigo]
+  ]));
+  b.addRaw(docxPageBreak());
+}
+
+function agregarIndiceAWord(b, r){
+  b.addRaw(docxH1('Contenido'));
+  construirIndice(r).forEach((item, i) => {
+    b.addRaw(docxP(`${String(i+1).padStart(2,'0')}   ${item}`, {size:24, color:NM_NAVY, spacingAfter:160}));
+  });
+  b.addRaw(docxPageBreak());
+}
+
 async function exportarWord(){
   if(!currentDetailId) return;
   const btn = document.getElementById('btnWord');
@@ -190,8 +254,9 @@ async function exportarWord(){
     const r = filaAVisita(row);
 
     const b = crearDocxBuilder();
-    b.addRaw(docxP('NETMASK S.A.S.', {bold:true, size:22, color:NM_BLUE, spacingAfter:20}));
-    b.addRaw(docxP('Envigado, Antioquia · Colombia', {size:16, color:'5B6470', spacingAfter:240}));
+    await agregarPortadaAWord(b, r);
+    agregarIndiceAWord(b, r);
+
     b.addRaw(docxH1('Informe de visita técnica — '+(r.codigo||'')));
     b.addRaw(docxKV([
       ['Proyecto', r.proyecto], ['Cliente', r.cliente], ['Sede', r.sede],
@@ -215,7 +280,7 @@ async function exportarWord(){
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = (r.codigo||'informe') + '.docx';
+    a.download = nombreInforme(r, 'docx');
     document.body.appendChild(a);
     a.click();
     a.remove();
