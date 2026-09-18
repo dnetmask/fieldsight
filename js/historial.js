@@ -14,17 +14,75 @@ function filaAVisita(row){
   };
 }
 
+const HISTORIAL_PAGINA = 30;
+// Solo las columnas que muestra la lista -- la columna `data` (fotos,
+// checklist, el reporte completo) se trae únicamente al abrir una visita.
+const HISTORIAL_COLUMNAS = 'id,codigo,proyecto,cliente,sede,tecnico,fecha,tipo,creado_por_nombre,created_at';
+let _histCargadas = 0;
+
+async function consultarPaginaHistorial(desde){
+  const { data: rows, error } = await supabaseClient.from('visitas')
+    .select(HISTORIAL_COLUMNAS)
+    .order('created_at', {ascending:false})
+    .order('id', {ascending:false})
+    .range(desde, desde + HISTORIAL_PAGINA - 1);
+  if(error) throw new Error(error.message);
+  return (rows||[]).map(filaAVisita);
+}
+
+function htmlItemHistorial(r){
+  return `
+    <div class="hist-item" onclick="goDetail('${r.id}')">
+      <div class="hist-tag">${(r.codigo||'FS').replace('FS-','')}</div>
+      <div class="hist-info">
+        <div class="n1">${escapeHtml(r.sede||'Sin sede')}</div>
+        <div class="n2">${escapeHtml(r.proyecto||'')} · ${r.fecha||''}</div>
+        <div class="n2" style="opacity:.8;">${escapeHtml(r.creadoPor||'—')}</div>
+        <div class="hist-badges">${r.tipo ? '<span class="badge">'+(TIPO_BADGE[r.tipo]||r.tipo)+'</span>' : ''}</div>
+      </div>
+      <div class="hist-chevron">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+  `;
+}
+
+function htmlBotonCargarMas(hayMas){
+  if(!hayMas) return '';
+  return `<div id="histMasWrap" style="margin:6px 0 20px;"><button class="btn btn-outline" onclick="cargarMasHistorial(this)">Cargar más visitas</button></div>`;
+}
+
+async function cargarMasHistorial(btn){
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = 'Cargando...';
+  try{
+    const mas = await consultarPaginaHistorial(_histCargadas);
+    _histCargadas += mas.length;
+    document.getElementById('histItems').insertAdjacentHTML('beforeend', mas.map(htmlItemHistorial).join(''));
+    if(mas.length < HISTORIAL_PAGINA){
+      const wrap = document.getElementById('histMasWrap');
+      if(wrap) wrap.remove();
+      return;
+    }
+  }catch(err){
+    toast('No se pudieron cargar más visitas: ' + (err && err.message ? err.message : ''), 3600);
+  }
+  btn.disabled = false;
+  btn.textContent = original;
+}
+
 async function cargarHistorial(){
   const listEl = document.getElementById('histList');
   listEl.innerHTML = '<div class="hint" style="text-align:center;padding:20px 0;">Cargando...</div>';
+  _histCargadas = 0;
 
   const pendientes = await listarPendientesLocal();
   let reports = [];
   let errorCarga = null;
   try{
-    const { data: rows, error } = await supabaseClient.from('visitas').select('*').order('created_at', {ascending:false});
-    if(error) throw new Error(error.message);
-    reports = (rows||[]).map(filaAVisita);
+    reports = await consultarPaginaHistorial(0);
+    _histCargadas = reports.length;
   }catch(err){
     errorCarga = err;
   }
@@ -63,22 +121,9 @@ async function cargarHistorial(){
     </div>
   `).join('');
 
-  const reportsHtml = reports.map(r => `
-    <div class="hist-item" onclick="goDetail('${r.id}')">
-      <div class="hist-tag">${(r.codigo||'FS').replace('FS-','')}</div>
-      <div class="hist-info">
-        <div class="n1">${escapeHtml(r.sede||'Sin sede')}</div>
-        <div class="n2">${escapeHtml(r.proyecto||'')} · ${r.fecha||''}</div>
-        <div class="n2" style="opacity:.8;">${escapeHtml(r.creadoPor||'—')}</div>
-        <div class="hist-badges">${r.tipo ? '<span class="badge">'+(TIPO_BADGE[r.tipo]||r.tipo)+'</span>' : ''}</div>
-      </div>
-      <div class="hist-chevron">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-      </div>
-    </div>
-  `).join('');
-
-  listEl.innerHTML = avisoError + pendientesHtml + reportsHtml;
+  listEl.innerHTML = avisoError + pendientesHtml
+    + '<div id="histItems">' + reports.map(htmlItemHistorial).join('') + '</div>'
+    + htmlBotonCargarMas(reports.length === HISTORIAL_PAGINA);
 }
 
 /* ---------------------------------------------------------

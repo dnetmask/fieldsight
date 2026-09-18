@@ -31,33 +31,28 @@ async function reabrirVisita(id){
     if(r.firma && r.firma.dataUrl) await dibujarFirmaDesde(r.firma.dataUrl);
 
     if(r.tipo === 'activos' && r.activos){
-      for(const a of r.activos){
-        const fotos = [];
-        for(const f of (a.fotos||[])){
-          const dataUrl = await resolverFoto(f.key);
-          fotos.push({cat:f.cat, key:f.key, dataUrl});
-        }
-        activos.push(Object.assign({}, a, {uid:newUid(), fotos, catSel:CAT_ACTIVO[0]}));
-      }
+      const fotosPorActivo = await resolverFotosPorGrupo(r.activos.map(a => a.fotos));
+      r.activos.forEach((a, i) => {
+        activos.push(Object.assign({}, a, {uid:newUid(), fotos: fotosPorActivo[i], catSel:CAT_ACTIVO[0]}));
+      });
       renderActivos();
     }
     if(r.tipo === 'implementacion' && r.implementaciones){
-      for(const it of r.implementaciones){
-        const fotosAntes = [];
-        for(const f of (it.fotosAntes||[])){ const dataUrl = await resolverFoto(f.key); fotosAntes.push({cat:f.cat, key:f.key, dataUrl}); }
-        const fotosDespues = [];
-        for(const f of (it.fotosDespues||[])){ const dataUrl = await resolverFoto(f.key); fotosDespues.push({cat:f.cat, key:f.key, dataUrl}); }
-        implementaciones.push(Object.assign({}, it, {uid:newUid(), fotosAntes, fotosDespues, catSelAntes:CAT_ANTES[0], catSelDespues:CAT_DESPUES[0]}));
-      }
+      const grupos = [];
+      r.implementaciones.forEach(it => { grupos.push(it.fotosAntes); grupos.push(it.fotosDespues); });
+      const fotosImpl = await resolverFotosPorGrupo(grupos);
+      r.implementaciones.forEach((it, i) => {
+        implementaciones.push(Object.assign({}, it, {uid:newUid(), fotosAntes: fotosImpl[2*i], fotosDespues: fotosImpl[2*i+1], catSelAntes:CAT_ANTES[0], catSelDespues:CAT_DESPUES[0]}));
+      });
       renderImpl();
     }
     if(r.tipo === 'inspeccion' && r.checklist){
-      for(const key of Object.keys(r.checklist)){
+      const claves = Object.keys(r.checklist);
+      const fotosChk = await resolverFotoKeys(claves.map(k => r.checklist[k].fotoKey || null));
+      claves.forEach((key, i) => {
         const st = r.checklist[key];
-        let fotoDataUrl = null;
-        if(st.fotoKey) fotoDataUrl = await resolverFoto(st.fotoKey);
-        checklistState[key] = {estado: st.estado||null, criticidad: st.criticidad||null, obs: st.obs||'', foto: fotoDataUrl, fotoKey: st.fotoKey||null};
-      }
+        checklistState[key] = {estado: st.estado||null, criticidad: st.criticidad||null, obs: st.obs||'', foto: fotosChk[i], fotoKey: st.fotoKey||null};
+      });
       renderChecklist();
       tipoInspeccion = r.tipoInspeccion || null;
       document.getElementById('tipoInspeccionSel').value = tipoInspeccion || '';
