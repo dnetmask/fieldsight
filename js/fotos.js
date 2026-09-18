@@ -64,7 +64,7 @@ function renderPhotoGrid(gridId, owner, field){
     <div class="photo-thumb">
       <img src="${f.dataUrl}">
       <div class="tag">${escapeHtml(f.cat)}</div>
-      <div class="del" onclick="delFotoGenerico('${gridId}','${owner.uid}','${field}',${idx})">×</div>
+      <button type="button" class="del" aria-label="Quitar foto" onclick="delFotoGenerico('${gridId}','${owner.uid}','${field}',${idx})"></button>
     </div>
   `).join('');
   html += `
@@ -127,9 +127,10 @@ function addFotoGenerico(gridId, uid, field, input){
   }, lineasMarcaFoto(owner, field));
   input.value = '';
 }
-function delFotoGenerico(gridId, uid, field, idx){
+async function delFotoGenerico(gridId, uid, field, idx){
   const owner = findOwner(uid);
   if(!owner) return;
+  if(!(await confirmar('¿Quitar esta foto?', {aceptar:'Quitar', peligro:true}))) return;
   owner[field].splice(idx, 1);
   renderPhotoGrid(gridId, owner, field);
   updatePhotoCount(gridId, owner[field].length);

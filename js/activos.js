@@ -11,8 +11,18 @@ function addActivo(){
   });
   renderActivos();
 }
-function removeActivo(uid){
-  activos = activos.filter(a => a.uid !== uid);
+async function removeActivo(uid){
+  const a = activos.find(x => x.uid === uid);
+  if(!a) return;
+  // Una tarjeta recién agregada y vacía se quita sin preguntar; una con
+  // datos o fotos ya capturadas en campo, sí.
+  const n = (a.fotos||[]).length;
+  const tieneDatos = n > 0 || ['nombre','marca','modelo','serial','area','proceso','maquina','ubicacion','tag','tablero','obs','ip','mac','tipo'].some(k => (a[k]||'').trim());
+  if(tieneDatos){
+    const detalle = n ? ` y sus ${n} foto${n===1?'':'s'}` : '';
+    if(!(await confirmar(`Se quitará este activo${detalle} de la visita.`, {titulo:'¿Quitar activo?', aceptar:'Quitar', peligro:true}))) return;
+  }
+  activos = activos.filter(x => x.uid !== uid);
   renderActivos();
 }
 function updateActivo(uid, field, value){

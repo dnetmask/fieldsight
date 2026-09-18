@@ -23,8 +23,8 @@ async function agregarTipoActivo(nuevo){
 }
 async function handleTipoActivoChange(uid, value){
   if(value === '__add__'){
-    const nuevo = window.prompt('Nombre del nuevo tipo de activo:');
-    if(nuevo && nuevo.trim()){
+    const nuevo = await pedirTexto('Quedará disponible en la lista para todo el equipo.', {titulo:'Nuevo tipo de activo', placeholder:'Ej. Firewall', aceptar:'Agregar'});
+    if(nuevo){
       const t = await agregarTipoActivo(nuevo);
       updateActivo(uid, 'tipo', t);
     }
@@ -67,10 +67,19 @@ function protocoloEsEthernet(nombre){
 }
 async function handleProtocoloChange(uid, value){
   if(value === '__add__'){
-    const nuevo = window.prompt('Nombre del nuevo protocolo:');
-    if(nuevo && nuevo.trim()){
-      const esEthernet = window.confirm('¿Este protocolo funciona sobre Ethernet y usa dirección IP/MAC?\n\nAceptar = Sí (Ethernet/IP)\nCancelar = No (serial/fieldbus)');
-      const nombre = await agregarProtocolo(nuevo, esEthernet);
+    const r = await mostrarModal({
+      titulo: 'Nuevo protocolo',
+      mensaje: 'Quedará disponible en la lista para todo el equipo.',
+      campo: {placeholder: 'Ej. EtherCAT'},
+      opciones: [
+        {valor:'ethernet', texto:'Sobre Ethernet', detalle:'Usa dirección IP y MAC'},
+        {valor:'serial', texto:'Serial / fieldbus', detalle:'Sin IP ni MAC'}
+      ],
+      opcionInicial: 'ethernet',
+      aceptar: 'Agregar'
+    });
+    if(r.ok && r.texto){
+      const nombre = await agregarProtocolo(r.texto, r.opcion === 'ethernet');
       updateActivo(uid, 'protocolo', nombre);
     }
   } else {
