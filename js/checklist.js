@@ -52,7 +52,7 @@ function renderChecklistPhoto(key){
   const st = checklistState[key];
   let html = '';
   if(st.foto){
-    html += `<div class="photo-thumb"><img src="${st.foto}"><div class="del" onclick="delChecklistFoto('${key.replace(/'/g,"\\'")}')">×</div></div>`;
+    html += `<div class="photo-thumb"><img src="${st.foto}"><button type="button" class="del" aria-label="Quitar foto" onclick="delChecklistFoto('${key.replace(/'/g,"\\'")}')"></button></div>`;
   } else {
     html += `<label class="photo-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Foto</span><input type="file" accept="image/*" capture="environment" onchange="addChecklistFoto('${key.replace(/'/g,"\\'")}', this)"></label>`;
   }
@@ -74,7 +74,8 @@ function addChecklistFoto(key, input){
   }, lineas);
   input.value = '';
 }
-function delChecklistFoto(key){
+async function delChecklistFoto(key){
+  if(!(await confirmar('¿Quitar esta foto?', {aceptar:'Quitar', peligro:true}))) return;
   checklistState[key].foto = null;
   checklistState[key].fotoKey = null;
   renderChecklistPhoto(key);

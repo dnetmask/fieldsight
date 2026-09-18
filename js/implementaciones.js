@@ -2,7 +2,15 @@ function addImpl(){
   implementaciones.push({uid:newUid(), tipo:'', descripcion:'', eqNombre:'', eqTipo:'', eqMarca:'', eqModelo:'', eqSerial:'', eqUbicacion:'', eqTablero:'', estadoInicial:'', estadoFinal:'', conformidad:'', hallazgos:'', accion:'', fotosAntes:[], fotosDespues:[], catSelAntes:CAT_ANTES[0], catSelDespues:CAT_DESPUES[0]});
   renderImpl();
 }
-function removeImpl(uid){
+async function removeImpl(uid){
+  const it = implementaciones.find(x => x.uid === uid);
+  if(!it) return;
+  const n = (it.fotosAntes||[]).length + (it.fotosDespues||[]).length;
+  const tieneDatos = n > 0 || ['tipo','descripcion','eqNombre','eqMarca','eqModelo','eqSerial','eqUbicacion','eqTablero','estadoInicial','estadoFinal','conformidad','hallazgos','accion'].some(k => (it[k]||'').trim());
+  if(tieneDatos){
+    const detalle = n ? ` y sus ${n} foto${n===1?'':'s'}` : '';
+    if(!(await confirmar(`Se quitará esta implementación${detalle} de la visita.`, {titulo:'¿Quitar implementación?', aceptar:'Quitar', peligro:true}))) return;
+  }
   implementaciones = implementaciones.filter(x => x.uid !== uid);
   renderImpl();
 }
