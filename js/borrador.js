@@ -84,7 +84,14 @@ async function restaurarBorradorSiExiste(){
   if(!b) return;
 
   const cuando = new Date(b.guardadoEn).toLocaleString('es-CO', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-  if(!confirm('Hay un borrador sin guardar de las '+cuando+'. ¿Quieres continuar donde quedaste?')){
+  const donde = [b.proyecto, b.sede].filter(s => s && s.trim()).join(' · ');
+  // descartable:false -- tocar afuera o Escape no debe descartar el trabajo
+  // del técnico; solo el botón explícito.
+  const continuar = await confirmar(
+    (donde ? donde + ' — ' : '') + 'guardado el ' + cuando + '. ¿Quieres continuar donde quedaste?',
+    {titulo:'Borrador sin guardar', aceptar:'Continuar', cancelar:'Descartar borrador', descartable:false}
+  );
+  if(!continuar){
     await borrarBorrador();
     return;
   }

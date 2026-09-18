@@ -117,7 +117,7 @@ async function handleOcrCapture(fileInput, targetInputId){
 
     const lineas = (data.text || '').split('\n').map(l => l.trim()).filter(Boolean);
     if(!lineas.length){
-      alert('No se detectó texto en la foto. Intenta con más luz y de más cerca, o escribe el valor manualmente.');
+      toast('No se detectó texto en la foto. Intenta con más luz y de más cerca, o escribe el valor a mano.', 3600);
       return;
     }
     // En modo "texto disperso" también aparecen fragmentos de ruido (barras
@@ -134,7 +134,7 @@ async function handleOcrCapture(fileInput, targetInputId){
       target.focus();
     }
   } catch(err){
-    alert(err.message || 'No se pudo leer el texto de la foto. Escribe el valor manualmente.');
+    toast(err.message || 'No se pudo leer el texto de la foto. Escribe el valor a mano.', 3600);
   } finally {
     if(btn) btn.classList.remove('ocr-loading');
     fileInput.value = '';

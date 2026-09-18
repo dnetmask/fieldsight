@@ -138,7 +138,7 @@ async function reabrirVisitaLocal(id){
 
 async function eliminarVisitaActual(){
   if(!currentDetailId) return;
-  if(!confirm('¿Eliminar esta visita? Esta acción no se puede deshacer.')) return;
+  if(!(await confirmar('Se eliminará la visita y todas sus fotos. Esta acción no se puede deshacer.', {titulo:'¿Eliminar esta visita?', aceptar:'Eliminar', peligro:true}))) return;
   try{
     const { data: files } = await supabaseClient.storage.from('fotos').list(currentDetailId);
     if(files && files.length){

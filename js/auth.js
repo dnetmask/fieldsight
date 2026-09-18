@@ -170,7 +170,7 @@ async function cargarSesion(session){
   intentarSincronizarPendientes(false);
 }
 async function cerrarSesion(){
-  if(!confirm('¿Cerrar sesión?')) return;
+  if(!(await confirmar('¿Cerrar sesión?', {aceptar:'Cerrar sesión'}))) return;
   try{ await supabaseClient.auth.signOut(); }catch(e){}
   currentUser = null; currentProfile = null;
   location.reload();
