@@ -2,6 +2,10 @@
    AUTENTICACIÓN
 --------------------------------------------------------- */
 let authModoRegistro = false;
+// Debe coincidir con GOTRUE_PASSWORD_MIN_LENGTH en
+// deploy/docker/supabase/docker-compose.seguridad.yml (esa es la validación
+// real; esta solo evita el viaje al servidor y da el mensaje en español).
+const PASSWORD_MIN_LENGTH = 8;
 
 function mostrarAuth(){
   document.querySelector('.topbar').classList.add('hidden');
@@ -74,8 +78,8 @@ async function guardarNuevaPassword(){
   const p2 = document.getElementById('newPassword2').value;
   const errEl = document.getElementById('newPasswordError');
   errEl.style.display = 'none';
-  if(!p1 || p1.length < 6){
-    errEl.textContent = 'La contraseña debe tener al menos 6 caracteres';
+  if(!p1 || p1.length < PASSWORD_MIN_LENGTH){
+    errEl.textContent = 'La contraseña debe tener al menos '+PASSWORD_MIN_LENGTH+' caracteres';
     errEl.style.display = 'block';
     return;
   }
@@ -113,6 +117,7 @@ async function submitAuth(){
 
   if(!email || !password){ errEl.textContent = 'Completa correo y contraseña'; errEl.style.display='block'; return; }
   if(authModoRegistro && !nombre){ errEl.textContent = 'Escribe tu nombre completo'; errEl.style.display='block'; return; }
+  if(authModoRegistro && password.length < PASSWORD_MIN_LENGTH){ errEl.textContent = 'La contraseña debe tener al menos '+PASSWORD_MIN_LENGTH+' caracteres'; errEl.style.display='block'; return; }
 
   const btn = document.getElementById('btnAuthSubmit');
   btn.disabled = true;
