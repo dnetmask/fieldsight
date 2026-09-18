@@ -37,13 +37,29 @@ async function enlaceFirmadoFoto(key, expiresIn=NM_LINK_EXPIRES_SECONDS){ // par
     return data.signedUrl;
   }catch(e){ return null; }
 }
+const FOTOS_EN_PARALELO = 5;
+
+// Resuelve varias listas de fotos a la vez con UN solo límite global de
+// descargas simultáneas (no uno por lista), y devuelve las listas en el
+// mismo orden. Antes cada foto se descargaba una por una: una visita con
+// 30 fotos tardaba 30 viajes de red seguidos en abrirse.
+async function resolverFotosPorGrupo(grupos){
+  const planas = [];
+  grupos.forEach((g, gi) => (g||[]).forEach(f => planas.push({gi, f})));
+  const resueltas = await mapConcurrente(planas, FOTOS_EN_PARALELO, async ({f}) => ({
+    cat: f.cat, key: f.key, dataUrl: await resolverFoto(f.key)
+  }));
+  const salida = grupos.map(() => []);
+  planas.forEach(({gi}, i) => salida[gi].push(resueltas[i]));
+  return salida;
+}
 async function resolverFotos(fotosArr){
-  const out = [];
-  for(const f of (fotosArr||[])){
-    const dataUrl = await resolverFoto(f.key);
-    out.push({cat:f.cat, dataUrl});
-  }
-  return out;
+  return (await resolverFotosPorGrupo([fotosArr]))[0];
+}
+// Igual que resolverFotosPorGrupo pero para claves sueltas (fotos del
+// checklist, una por ítem). Devuelve dataUrls en el mismo orden.
+async function resolverFotoKeys(keys){
+  return mapConcurrente(keys, FOTOS_EN_PARALELO, (k) => k ? resolverFoto(k) : Promise.resolve(null));
 }
 
 /* Igual convención de nombre que Word/Excel (nombreInforme, js/utils.js):
@@ -76,9 +92,10 @@ async function mostrarDetalle(id){
     let activosHtml = '';
     if(r.tipo === 'activos' && r.activos && r.activos.length){
       const bloques = [];
+      const fotosPorActivo = await resolverFotosPorGrupo(r.activos.map(a => a.fotos));
       for(let i=0;i<r.activos.length;i++){
         const a = r.activos[i];
-        const fotosResueltas = await resolverFotos(a.fotos);
+        const fotosResueltas = fotosPorActivo[i];
         let fotos = '';
         if(fotosResueltas.length){
           fotos = '<div class="print-photo-grid" style="margin-top:8px;">' + fotosResueltas.filter(f=>f.dataUrl).map(f=>`<div><img src="${f.dataUrl}"><div class="cap">${escapeHtml(f.cat)}</div></div>`).join('') + '</div>';
@@ -106,10 +123,13 @@ async function mostrarDetalle(id){
     let implHtml = '';
     if(r.tipo === 'implementacion' && r.implementaciones && r.implementaciones.length){
       const bloques = [];
+      const grupos = [];
+      r.implementaciones.forEach(it => { grupos.push(it.fotosAntes); grupos.push(it.fotosDespues); });
+      const fotosImpl = await resolverFotosPorGrupo(grupos);
       for(let i=0;i<r.implementaciones.length;i++){
         const it = r.implementaciones[i];
-        const antesR = (await resolverFotos(it.fotosAntes)).filter(f=>f.dataUrl);
-        const despuesR = (await resolverFotos(it.fotosDespues)).filter(f=>f.dataUrl);
+        const antesR = fotosImpl[2*i].filter(f=>f.dataUrl);
+        const despuesR = fotosImpl[2*i+1].filter(f=>f.dataUrl);
         let fotos = '';
         if(antesR.length){
           fotos += '<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--ink-soft);letter-spacing:.5px;">ANTES</div><div class="print-photo-grid">' + antesR.map(f=>`<div><img src="${f.dataUrl}"><div class="cap">${escapeHtml(f.cat)}</div></div>`).join('') + '</div>';
@@ -139,6 +159,10 @@ async function mostrarDetalle(id){
 
     let checklistHtml = '';
     if(r.tipo === 'inspeccion'){
+      const clavesConFoto = Object.keys(r.checklist||{}).filter(k => r.checklist[k] && r.checklist[k].fotoKey);
+      const fotosChk = await resolverFotoKeys(clavesConFoto.map(k => r.checklist[k].fotoKey));
+      const fotoPorClave = {};
+      clavesConFoto.forEach((k, i) => { fotoPorClave[k] = fotosChk[i]; });
       let rows = '';
       for(const grp of CHECKLIST_DEF){
         rows += `<div class="check-group-title" style="margin-top:10px;">${grp.grupo}</div>`;
@@ -148,9 +172,8 @@ async function mostrarDetalle(id){
           const pillClass = st.estado === 'ok' ? 'ok' : st.estado === 'bad' ? 'bad' : 'na';
           const pillText = st.estado === 'ok' ? 'Cumple' : st.estado === 'bad' ? (st.criticidad ? 'No cumple · '+st.criticidad : 'No cumple') : 'N/A';
           let fotoHtml = '';
-          if(st.fotoKey){
-            const dataUrl = await resolverFoto(st.fotoKey);
-            if(dataUrl) fotoHtml = `<div style="margin-top:6px;"><img src="${dataUrl}" style="width:90px;border-radius:6px;border:1px solid var(--card-line);"></div>`;
+          if(st.fotoKey && fotoPorClave[key]){
+            fotoHtml = `<div style="margin-top:6px;"><img src="${fotoPorClave[key]}" style="width:90px;border-radius:6px;border:1px solid var(--card-line);"></div>`;
           }
           rows += `<div class="check-result-row" style="display:block;">
             <div style="display:flex;justify-content:space-between;gap:10px;">
