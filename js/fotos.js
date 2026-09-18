@@ -124,6 +124,7 @@ function addFotoGenerico(gridId, uid, field, input){
     owner[field].push({cat: owner[catField], dataUrl});
     renderPhotoGrid(gridId, owner, field);
     updatePhotoCount(gridId, owner[field].length);
+    programarBorradorPronto();
   }, lineasMarcaFoto(owner, field));
   input.value = '';
 }

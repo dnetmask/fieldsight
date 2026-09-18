@@ -19,14 +19,7 @@ async function reabrirVisita(id){
     document.getElementById('sigNombre').value = (r.firma&&r.firma.nombre)||'';
     document.getElementById('sigCargo').value = (r.firma&&r.firma.cargo)||'';
 
-    gpsActual = r.gps || null;
-    if(gpsActual){
-      document.getElementById('gpsEmpty').classList.add('hidden');
-      document.getElementById('gpsData').classList.remove('hidden');
-      document.getElementById('gpsCoord').textContent = gpsActual.lat.toFixed(6)+', '+gpsActual.lng.toFixed(6);
-      document.getElementById('gpsMeta').textContent = 'Precisión ±'+Math.round(gpsActual.acc)+' m · '+new Date(gpsActual.ts).toLocaleTimeString('es-CO');
-      document.getElementById('gpsLink').href = 'https://maps.google.com/?q='+gpsActual.lat+','+gpsActual.lng;
-    }
+    pintarGps(r.gps || null);
 
     if(r.firma && r.firma.dataUrl) await dibujarFirmaDesde(r.firma.dataUrl);
 
@@ -95,14 +88,7 @@ async function reabrirVisitaLocal(id){
     document.getElementById('sigNombre').value = (r && r.firma && r.firma.nombre) || '';
     document.getElementById('sigCargo').value = (r && r.firma && r.firma.cargo) || '';
 
-    gpsActual = (r && r.gps) || null;
-    if(gpsActual){
-      document.getElementById('gpsEmpty').classList.add('hidden');
-      document.getElementById('gpsData').classList.remove('hidden');
-      document.getElementById('gpsCoord').textContent = gpsActual.lat.toFixed(6)+', '+gpsActual.lng.toFixed(6);
-      document.getElementById('gpsMeta').textContent = 'Precisión ±'+Math.round(gpsActual.acc)+' m · '+new Date(gpsActual.ts).toLocaleTimeString('es-CO');
-      document.getElementById('gpsLink').href = 'https://maps.google.com/?q='+gpsActual.lat+','+gpsActual.lng;
-    }
+    pintarGps((r && r.gps) || null);
 
     if(r && r.firma && r.firma.dataUrl) await dibujarFirmaDesde(r.firma.dataUrl);
 

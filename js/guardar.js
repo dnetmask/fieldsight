@@ -124,6 +124,7 @@ function cancelarEdicion(){
 }
 
 function resetForm(){
+  cancelarBorradorPronto();
   borrarBorrador().catch(()=>{});
   document.getElementById('fProyecto').value='';
   document.getElementById('fCliente').value='';
@@ -138,9 +139,7 @@ function resetForm(){
   document.getElementById('blockActivos').classList.add('hidden');
   document.getElementById('blockImplementacion').classList.add('hidden');
   document.getElementById('blockChecklist').classList.add('hidden');
-  gpsActual = null;
-  document.getElementById('gpsEmpty').classList.remove('hidden');
-  document.getElementById('gpsData').classList.add('hidden');
+  pintarGps(null);
   activos = []; renderActivos();
   implementaciones = []; renderImpl();
   checklistState = {}; renderChecklist();

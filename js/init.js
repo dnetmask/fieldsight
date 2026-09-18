@@ -45,13 +45,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 /* ---------------------------------------------------------
    BORRADOR AUTOMÁTICO — cada 30s, solo si hay algo que valga la
    pena guardar y el formulario está a la vista (no en Historial).
+   Además, como respaldo del temporizador: al pasar a segundo plano
+   (Android puede matar la pestaña sin avisar) y al salir de la
+   página. Y ~2s después de cada foto nueva (ver js/borrador.js).
 --------------------------------------------------------- */
-setInterval(() => {
-  const formView = document.getElementById('formView');
-  if(!formView || formView.classList.contains('hidden')) return;
-  const hayContenido = tipoSel || document.getElementById('fProyecto').value.trim() || document.getElementById('fSede').value.trim();
-  if(hayContenido) guardarBorradorActual();
-}, 30 * 1000);
+setInterval(guardarBorradorSiHayContenido, 30 * 1000);
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'hidden') guardarBorradorSiHayContenido();
+});
+window.addEventListener('pagehide', guardarBorradorSiHayContenido);
 
 /* ---------------------------------------------------------
    SINCRONIZACIÓN EN SEGUNDO PLANO — se dispara cuando vuelve la
