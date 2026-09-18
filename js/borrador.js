@@ -75,6 +75,25 @@ async function guardarBorradorActual(){
   try{ await guardarBorrador(snapshotFormularioActual()); }
   catch(e){ console.log('No se pudo autoguardar el borrador:', e); }
 }
+// Solo si el formulario está a la vista y tiene algo que valga la pena guardar.
+function guardarBorradorSiHayContenido(){
+  const formView = document.getElementById('formView');
+  if(!formView || formView.classList.contains('hidden')) return;
+  const hayContenido = tipoSel || document.getElementById('fProyecto').value.trim() || document.getElementById('fSede').value.trim();
+  if(hayContenido) guardarBorradorActual();
+}
+// Guarda ~2 s después de un cambio caro de perder (una foto nueva), sin
+// esperar al temporizador de 30 s. resetForm() lo cancela para que un
+// guardado tardío no deje un borrador de un formulario ya vacío.
+let _borradorProntoTimer = null;
+function programarBorradorPronto(){
+  clearTimeout(_borradorProntoTimer);
+  _borradorProntoTimer = setTimeout(guardarBorradorSiHayContenido, 2000);
+}
+function cancelarBorradorPronto(){
+  clearTimeout(_borradorProntoTimer);
+  _borradorProntoTimer = null;
+}
 
 // Se llama una vez al iniciar sesión — si hay un borrador, ofrece
 // continuar donde se quedó o descartarlo.
@@ -106,14 +125,7 @@ async function restaurarBorradorSiExiste(){
   document.getElementById('sigNombre').value = b.sigNombre || '';
   document.getElementById('sigCargo').value = b.sigCargo || '';
 
-  gpsActual = b.gpsActual || null;
-  if(gpsActual){
-    document.getElementById('gpsEmpty').classList.add('hidden');
-    document.getElementById('gpsData').classList.remove('hidden');
-    document.getElementById('gpsCoord').textContent = gpsActual.lat.toFixed(6)+', '+gpsActual.lng.toFixed(6);
-    document.getElementById('gpsMeta').textContent = 'Precisión ±'+Math.round(gpsActual.acc)+' m · '+new Date(gpsActual.ts).toLocaleTimeString('es-CO');
-    document.getElementById('gpsLink').href = 'https://maps.google.com/?q='+gpsActual.lat+','+gpsActual.lng;
-  }
+  pintarGps(b.gpsActual || null);
   if(b.firmaDataUrl) await dibujarFirmaDesde(b.firmaDataUrl);
 
   activos = b.activos || [];
