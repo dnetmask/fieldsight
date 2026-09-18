@@ -1,6 +1,12 @@
 # Dependencias (por si se instalan localmente para deploy/azure)
 node_modules/
 package-lock.json
+# ...salvo el lockfile raíz, que fija las versiones del tooling de pruebas
+!/package-lock.json
+
+# Salidas de Playwright (tests/e2e)
+test-results/
+playwright-report/
 
 # Sistema
 .DS_Store
