@@ -69,11 +69,18 @@ generar secretos y cargar el esquema, con estas diferencias:
   API_EXTERNAL_URL=https://IP_PUBLICA:PUERTO_EXTERNO/auth/v1
   SITE_URL=https://IP_PUBLICA:PUERTO_EXTERNO
   ```
-- Levanta el stack y únelo a la red compartida:
+- Registra los overrides propios **una sola vez** (quedan guardados en
+  `COMPOSE_FILE` dentro de `.env`, así `sh run.sh start` los toma siempre,
+  sin tener que pasar `-f` a mano) y levanta el stack:
   ```bash
+  sh run.sh config add backup
+  sh run.sh config add gateway-network
+  sh run.sh config add seguridad
   sh run.sh start
-  docker compose -f docker-compose.yml -f docker-compose.gateway-network.yml up -d
   ```
+  `gateway-network` une Supabase a la red compartida y le quita a supavisor
+  los puertos 5432/6543 del host; `seguridad` fija la contraseña mínima de
+  8 caracteres en Auth (la misma que exige la app).
 
 ## 4) Conectar y construir la app
 
@@ -120,9 +127,20 @@ túnel SSH a Studio).
 ```bash
 git pull origin main
 docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.gateway-network.yml up -d --build
-docker compose -f deploy/docker/supabase/docker-compose.yml -f deploy/docker/supabase/docker-compose.gateway-network.yml up -d
-docker compose -f deploy/docker/gateway/docker-compose.yml restart
 ```
+Y, solo si el cambio los toca:
+```bash
+(cd deploy/docker/supabase && sh run.sh start)                        # cambió algo de Supabase (.env, overrides)
+docker compose -f deploy/docker/gateway/docker-compose.yml restart     # cambió deploy/docker/gateway/nginx.conf
+```
+Si el cambio trae un archivo nuevo en `supabase/actualizaciones/`, córrelo
+una vez en el SQL Editor de Studio (por el túnel SSH) — son cambios de
+esquema para bases que ya existían; las instalaciones nuevas ya los traen
+en `supabase/schema.sql`.
+
+Los celulares toman la versión nueva en la siguiente apertura con red: el
+service worker (`sw.js`) precachea la app para que abra sin señal, y
+renueva su caché solo cuando cambia `CACHE_NAME`.
 
 ## Si en algún momento sí consiguen un dominio
 

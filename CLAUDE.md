@@ -106,9 +106,28 @@ Supabase). Resumen:
 - **Exportación a Excel (`js/export-excel.js`)**: usa SheetJS (Community).
   No soporta incrustar imágenes reales en el `.xlsx` sin la versión Pro —
   por eso el Excel es solo datos tabulares; las fotos van en Word/PDF/ZIP.
-- **Colores de marca de Netmask** (navy `#0A2540`, azul `#0072CE`) y el
-  ícono de la app (un pin de ubicación) son **provisionales** — pendiente
-  el logo real de Netmask S.A.S. para reemplazar.
+- **Marca**: el logo real de Netmask es `icons/Logo_Netmask_1500x300px.png`
+  (login, encabezado, portada del Word) y los íconos de la PWA
+  (`icons/icon-*.png`, `favicon-64.png`) son la "N" del logo en blanco
+  sobre el azul de marca. Colores: navy `#0A2540`, azul `#0072CE` — la
+  variable CSS del azul se llama `--orange` por razones históricas.
+- **Diálogos**: usar `confirmar()`, `pedirTexto()` o `mostrarModal()` de
+  `js/modal.js`. Nunca `confirm()`/`prompt()`/`alert()` nativos — se ven
+  ajenos a la app y en iOS instalada rompen la sensación de "app".
+- **Service worker (`sw.js`)**: precachea todo lo propio y las librerías
+  de CDN para que la app abra sin señal. **Si agregas un `<script>` a
+  `index.html`, agrégalo también a `CORE_ASSETS` y sube `CACHE_NAME`.**
+  Nunca debe interceptar `/auth`, `/rest`, `/storage`, etc.: en
+  producción la API de Supabase vive en el mismo origen que la app
+  (un solo gateway), y cachearla sirve datos viejos y acumula fotos.
+- **Historial**: paginado de a 30 con búsqueda y filtros aplicados en el
+  servidor; la lista solo pide columnas planas, nunca `data`. Las fotos
+  de una visita se descargan con `resolverFotosPorGrupo()` (tope de 5 en
+  paralelo, por el rate-limit del gateway).
+- **Cambios de esquema**: `supabase/schema.sql` es la fuente de verdad
+  para instalaciones nuevas. Para bases que ya existen, agrega además un
+  archivo fechado en `supabase/actualizaciones/` con el SQL idempotente
+  que hay que correr en Studio.
 - **Compresión de fotos** (`js/fotos.js`, función `comprimirFoto`): reduce
   progresivamente la calidad JPEG hasta quedar bajo un tamaño objetivo.
   Si se ajusta, probar con fotos reales de campo (buena luz y mala luz),
@@ -116,6 +135,12 @@ Supabase). Resumen:
 
 ## Despliegue
 
+- **Producción real: `deploy/docker/` en una VM de Netmask**, detrás de un
+  solo gateway nginx con certificado autofirmado (no hay dominio) que
+  enruta por ruta entre la app y Supabase auto-hospedado. Guía paso a
+  paso: `deploy/docker/LEEME-MIGRACION-VM-SIN-DOMINIO.md`. `js/config.js`
+  se edita en la VM con los valores reales antes de construir la imagen
+  (queda horneado dentro) y nunca se commitea con ellos.
 - `deploy/azure/` — para Azure App Service (Windows: usa `web.config`;
   Linux/Node: usa `server.js` + `package.json` — nunca ambos a la vez).
   Ver `deploy/azure/LEEME-AZURE.md`.

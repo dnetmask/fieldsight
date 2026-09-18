@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fieldsight-cache-v5';
+const CACHE_NAME = 'fieldsight-cache-v6';
 
 // Todo lo propio que la app necesita para arrancar sin red. Debe coincidir
 // con los <script src="js/..."> de index.html -- si falta uno, la app abre
