@@ -1,0 +1,38 @@
+name: Pruebas
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar tooling de pruebas
+        run: npm ci
+
+      - name: Pruebas unitarias (node --test)
+        run: npm test
+
+      - name: Instalar Chromium para Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Pruebas end-to-end (Playwright, Supabase simulado)
+        run: npm run test:e2e
+
+      - name: Guardar reporte de Playwright si falló
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
