@@ -240,6 +240,14 @@
     <div class="install-banner" id="installBanner">
       💡 <b>Tip:</b> en Android/Chrome debería aparecer un botón de instalación (⬇) junto al ícono de historial arriba. Si no aparece, usa el menú del navegador → <b>"Agregar a pantalla de inicio" / "Instalar app"</b>. En iPhone/Safari: toca <b>Compartir → Agregar a pantalla de inicio</b>.
     </div>
+    <div class="hist-filtros">
+      <input type="search" id="histBuscar" placeholder="Buscar por cliente, sede, proyecto o técnico" autocomplete="off" oninput="onFiltroHistorialCambio()">
+      <button type="button" class="hist-filtro-toggle" onclick="toggleFiltroFechas()">Filtrar por fecha</button>
+      <div class="field-row hidden" id="histFechas">
+        <div><label>Desde</label><input type="date" id="histDesde" onchange="onFiltroHistorialCambio()"></div>
+        <div><label>Hasta</label><input type="date" id="histHasta" onchange="onFiltroHistorialCambio()"></div>
+      </div>
+    </div>
     <div id="histList"></div>
   </div>
 
