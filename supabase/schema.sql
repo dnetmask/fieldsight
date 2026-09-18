@@ -43,6 +43,11 @@ create table public.catalogo_protocolos (
   ethernet boolean not null default false
 );
 
+-- "Switch" y "switch" son la misma entrada: el unique de arriba distingue
+-- mayúsculas, estos índices no.
+create unique index if not exists catalogo_tipos_activo_nombre_lower_idx on public.catalogo_tipos_activo (lower(nombre));
+create unique index if not exists catalogo_protocolos_nombre_lower_idx on public.catalogo_protocolos (lower(nombre));
+
 -- 3) VISITAS (proyecto/actividad de campo), con trazabilidad de quién y cuándo
 create table public.visitas (
   id text primary key,
@@ -85,6 +90,12 @@ create policy "Ver tipos de activo" on public.catalogo_tipos_activo for select u
 create policy "Agregar tipos de activo" on public.catalogo_tipos_activo for insert with check (auth.uid() is not null);
 create policy "Ver protocolos" on public.catalogo_protocolos for select using (auth.uid() is not null);
 create policy "Agregar protocolos" on public.catalogo_protocolos for insert with check (auth.uid() is not null);
+-- Curaduría (pantalla Administrar → Catálogos compartidos): solo un
+-- administrador puede quitar entradas del catálogo.
+create policy "Administradores quitan tipos de activo" on public.catalogo_tipos_activo for delete
+  using ( public.mi_rol() = 'administrador' );
+create policy "Administradores quitan protocolos" on public.catalogo_protocolos for delete
+  using ( public.mi_rol() = 'administrador' );
 
 -- Visitas: cualquier autenticado puede ver y crear.
 create policy "Ver visitas" on public.visitas for select using (auth.uid() is not null);
