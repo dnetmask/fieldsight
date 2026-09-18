@@ -9,7 +9,9 @@ function addActivo(){
     proceso: anterior ? anterior.proceso : '',
     maquina:'', ubicacion:'', nombre:'', tipo:'', marca:'', modelo:'', serial:'', tag:'', tablero:'', estado:'', obs:'', otRed:'', protocolo:'', ip:'', mac:'', fotos:[], catSel:CAT_ACTIVO[0]
   });
-  renderActivos();
+  const a = activos[activos.length - 1];
+  document.getElementById('activosList').insertAdjacentHTML('beforeend', htmlActivo(a, activos.length - 1));
+  renderPhotoGrid('grid-act-'+a.uid, a, 'fotos');
 }
 async function removeActivo(uid){
   const a = activos.find(x => x.uid === uid);
@@ -29,10 +31,9 @@ function updateActivo(uid, field, value){
   const a = activos.find(x => x.uid === uid);
   if(a) a[field] = value;
 }
-function renderActivos(){
-  const wrap = document.getElementById('activosList');
-  wrap.innerHTML = activos.map((a, idx) => `
-    <div class="rep-card">
+function htmlActivo(a, idx){
+  return `
+    <div class="rep-card" id="act-${a.uid}">
       <div class="rep-head">
         <div class="rep-title">Activo ${idx+1}</div>
         <button class="rep-del" onclick="removeActivo('${a.uid}')">×</button>
@@ -138,8 +139,22 @@ function renderActivos(){
         <div class="photo-grid" id="grid-act-${a.uid}"></div>
       </div>
     </div>
-  `).join('');
+  `;
+}
+function renderActivos(){
+  const wrap = document.getElementById('activosList');
+  wrap.innerHTML = activos.map(htmlActivo).join('');
   activos.forEach(a => renderPhotoGrid('grid-act-'+a.uid, a, 'fotos'));
+}
+// Repinta solo la tarjeta de un activo (p. ej. al cambiar el protocolo, que
+// muestra u oculta IP/MAC). Repintar la lista completa vuelve a decodificar
+// las miniaturas de TODAS las fotos de la visita, y se nota en el teléfono.
+function rerenderActivo(uid){
+  const idx = activos.findIndex(a => a.uid === uid);
+  const card = document.getElementById('act-'+uid);
+  if(idx < 0 || !card){ renderActivos(); return; }
+  card.outerHTML = htmlActivo(activos[idx], idx);
+  renderPhotoGrid('grid-act-'+uid, activos[idx], 'fotos');
 }
 
 /* ---------------------------------------------------------

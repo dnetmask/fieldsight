@@ -52,3 +52,69 @@ async function cambiarRolUsuario(id, nuevoRol, selectEl){
   }
   selectEl.disabled = false;
 }
+
+/* ---------------------------------------------------------
+   CATÁLOGOS COMPARTIDOS -- curaduría: ver qué tipos de activo y
+   protocolos existen, cuántas visitas usan cada uno, y quitar los que
+   no se usan (duplicados, errores de tipeo). Requiere las políticas
+   "Administradores quitan ..." de supabase/schema.sql.
+--------------------------------------------------------- */
+let _catalogoAdminEntradas = [];
+
+async function contarUsoEnVisitas(campo, valor){
+  const filtro = {activos: [{}]};
+  filtro.activos[0][campo] = valor;
+  const { count, error } = await supabaseClient.from('visitas').select('id', {count:'exact', head:true}).contains('data', filtro);
+  return error ? null : (count || 0);
+}
+
+async function cargarCatalogosAdmin(){
+  const el = document.getElementById('adminCatalogos');
+  if(!el) return;
+  el.innerHTML = '<div class="hint" style="text-align:center;padding:12px 0;">Cargando catálogos...</div>';
+  try{
+    await Promise.all([cargarCatalogoTipos(), cargarCatalogoProtocolos()]);
+    const tipos = CATALOGO_TIPOS.map(n => ({tabla:'catalogo_tipos_activo', campo:'tipo', nombre:n, extra:''}));
+    const protocolos = CATALOGO_PROTOCOLOS.map(p => ({tabla:'catalogo_protocolos', campo:'protocolo', nombre:p.nombre, extra: p.ethernet ? 'Ethernet · IP/MAC' : 'Serial / fieldbus'}));
+    _catalogoAdminEntradas = tipos.concat(protocolos);
+    const usos = await mapConcurrente(_catalogoAdminEntradas, 5, e => contarUsoEnVisitas(e.campo, e.nombre));
+    _catalogoAdminEntradas.forEach((e, i) => { e.uso = usos[i]; e.indice = i; });
+    el.innerHTML = htmlBloqueCatalogo('Tipos de activo', tipos) + htmlBloqueCatalogo('Protocolos', protocolos);
+  }catch(err){
+    console.error(err);
+    el.innerHTML = '<div class="hint">No se pudieron cargar los catálogos: '+escapeHtml(err.message||'')+'</div>';
+  }
+}
+
+function htmlBloqueCatalogo(titulo, entradas){
+  const filas = entradas.map(e => {
+    const uso = e.uso == null ? 'uso desconocido' : e.uso === 0 ? 'sin uso' : `en ${e.uso} visita${e.uso === 1 ? '' : 's'}`;
+    const puedeQuitar = e.uso === 0;
+    return `
+      <div class="cat-fila">
+        <div class="cat-info">
+          <div class="cat-nombre">${escapeHtml(e.nombre)}</div>
+          <div class="cat-meta">${escapeHtml(e.extra ? e.extra + ' · ' + uso : uso)}</div>
+        </div>
+        <button type="button" class="btn btn-danger cat-quitar" ${puedeQuitar ? '' : 'disabled title="Está en uso en visitas guardadas"'} onclick="quitarEntradaCatalogo(${e.indice}, this)">Quitar</button>
+      </div>`;
+  }).join('');
+  return `<div class="card"><div class="check-group-title">${escapeHtml(titulo)} <span class="cat-total">${entradas.length}</span></div>${filas || '<div class="hint">Vacío</div>'}</div>`;
+}
+
+async function quitarEntradaCatalogo(indice, btn){
+  const e = _catalogoAdminEntradas[indice];
+  if(!e) return;
+  if(!(await confirmar(`Se quitará "${e.nombre}" de la lista compartida de todo el equipo.`, {titulo:'¿Quitar del catálogo?', aceptar:'Quitar', peligro:true}))) return;
+  btn.disabled = true;
+  try{
+    // Igual que con los roles: si RLS lo bloquea no hay error, solo 0 filas.
+    const { data, error } = await supabaseClient.from(e.tabla).delete().eq('nombre', e.nombre).select();
+    if(error) throw new Error(error.message);
+    if(!data || !data.length) throw new Error('No tienes permiso para quitar entradas del catálogo');
+    toast('Quitado del catálogo ✓');
+  }catch(err){
+    toast('No se pudo quitar: ' + (err.message || ''), 3600);
+  }
+  await cargarCatalogosAdmin();
+}

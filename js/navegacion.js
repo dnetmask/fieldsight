@@ -31,6 +31,7 @@ function goAdmin(){
   document.getElementById('adminView').classList.remove('hidden');
   setTabs('');
   cargarUsuarios();
+  cargarCatalogosAdmin();
 }
 
 /* ---------------------------------------------------------
