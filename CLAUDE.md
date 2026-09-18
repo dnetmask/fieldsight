@@ -152,14 +152,31 @@ Supabase). Resumen:
 
 ## Testing
 
-No hay suite de pruebas automatizadas todavía — la validación ha sido
-manual, con técnicos reales en campo. Si agregas pruebas, considera:
-- Pruebas de navegador (Playwright/Cypress) para flujos end-to-end, dado
-  que no hay build step que facilite pruebas unitarias tradicionales.
-- Las funciones de validación pura (`validarIP`, `validarMAC` en
-  `js/validacion.js`; `sanitizarNombre`, `extDeDataUrl` en
-  `js/export-zip.js`) son fáciles de probar de forma aislada si se
-  necesita cobertura rápida.
+Dos capas, ambas corren en GitHub Actions (`.github/workflows/pruebas.yml`)
+en cada push a `main`/`develop` y en cada PR. El `package.json` raíz existe
+solo para esto: la app sigue sin build ni dependencias en ejecución.
+
+- **Unitarias** — `npm test` (runner nativo de Node, `tests/unit/*.test.js`,
+  sin frameworks). `tests/helpers/sandbox.js` carga los `js/*.js` tal cual
+  (scripts clásicos con globales) en un contexto aislado, con dobles de
+  `document`, `supabaseClient`, `fetch`, etc. Las funciones quedan como
+  `sb.nombre`; los `let/const` de nivel superior se leen con
+  `evaluar(sb, 'NOMBRE')`; los arrays/objetos que salen del sandbox se
+  comparan con `plano(x)` (otro realm). El `.docx` y el `.xlsx` se generan
+  de verdad (JSZip/SheetJS desde npm) y se inspecciona su estructura; el
+  service worker se simula con dobles de `caches`/`fetch`.
+- **End-to-end** — `npm run test:e2e` (Playwright, Chromium, viewport de
+  celular). `tests/servidor-estatico.js` sirve el repo sin caché e inyecta
+  la URL de Supabase en `js/config.js`; `tests/e2e/supabase-falso.js`
+  responde por Supabase interceptando la red (`page.route`), así que no
+  hacen falta Docker ni credenciales. Cubre login, historial (paginación,
+  búsqueda, fechas), modal propio, botón de foto, GPS y **abrir la app sin
+  red** desde el service worker. La primera vez: `npm install` y
+  `npx playwright install chromium`.
+- Al agregar una función pura o un flujo nuevo, agrégale su prueba en la
+  capa que corresponda; una prueba e2e nueva que necesite datos del
+  servidor se resuelve ampliando `supabase-falso.js`, no apuntando a un
+  Supabase real.
 
 ## Historial
 

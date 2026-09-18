@@ -5,3 +5,11 @@ docs
 deploy/azure
 deploy/netlify
 *.md
+# Pruebas y su tooling: no van en la imagen
+tests
+.github
+test-results
+playwright-report
+playwright.config.js
+/package.json
+/package-lock.json

@@ -1,0 +1,16 @@
+{
+  "name": "fieldsight-pruebas",
+  "private": true,
+  "description": "Tooling de pruebas de FieldSight. La app no tiene build ni dependencias en tiempo de ejecución; esto solo instala lo necesario para correr las pruebas (ver tests/).",
+  "scripts": {
+    "test": "node --test \"tests/unit/*.test.js\"",
+    "test:e2e": "playwright test",
+    "test:all": "npm test && npm run test:e2e",
+    "servir": "node tests/servidor-estatico.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "jszip": "^3.10.1",
+    "xlsx": "^0.18.5"
+  }
+}
