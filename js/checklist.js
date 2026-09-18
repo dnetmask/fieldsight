@@ -71,6 +71,7 @@ function addChecklistFoto(key, input){
     checklistState[key].foto = dataUrl;
     checklistState[key].fotoKey = null; // es una foto nueva, aún no tiene clave subida
     renderChecklistPhoto(key);
+    programarBorradorPronto();
   }, lineas);
   input.value = '';
 }
