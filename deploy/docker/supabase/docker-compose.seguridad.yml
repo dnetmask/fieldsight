@@ -1,0 +1,17 @@
+# Ajustes de seguridad de Supabase Auth que el docker-compose.yml oficial no
+# expone por variable -- override propio, no toca los archivos vendorizados
+# (mismo patrón que docker-compose.backup.yml y docker-compose.gateway-network.yml).
+#
+# Registrar una sola vez (queda guardado en COMPOSE_FILE dentro de .env, y
+# desde ahí `sh run.sh start` lo toma siempre):
+#   sh run.sh config add seguridad
+#
+# GOTRUE_PASSWORD_MIN_LENGTH: mínimo de caracteres al registrarse o al
+# cambiar la contraseña. La app exige lo mismo del lado del navegador
+# (js/auth.js), pero esta es la validación que no se puede saltar. Las
+# cuentas ya creadas con una contraseña más corta siguen pudiendo entrar.
+
+services:
+  auth:
+    environment:
+      GOTRUE_PASSWORD_MIN_LENGTH: "8"
